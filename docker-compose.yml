@@ -1,0 +1,39 @@
+version: '3.8'
+
+services:
+  backend:
+    build: 
+      context: ./backend
+      dockerfile: Dockerfile
+    container_name: ds-forge-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./backend/app:/app/app
+      # Mount storage so data persists locally on your Windows machine
+      - ./backend/app/storage:/app/app/storage
+      - ./backend/app/db:/app/app/db
+    environment:
+      - DATABASE_URL=sqlite:///./app/db/ds-forge.sqlite
+      - PROJECT_NAME=DS-Forge
+    restart: always
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile
+    container_name: ds-forge-frontend
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./frontend/app:/app/app
+      - ./frontend/components:/app/components
+      - ./frontend/lib:/app/lib
+      - ./frontend/store:/app/store
+      - ./frontend/public:/app/public
+      # Prevent node_modules syncing issues between Windows/Linux
+      - /app/node_modules
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
