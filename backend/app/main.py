@@ -5,7 +5,7 @@ from app.db.base import Base
 from app.db.session import engine
 
 # Import Routers
-from app.api import datasets, cleaning
+from app.api import datasets, cleaning, models, training
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -28,6 +28,8 @@ app.add_middleware(
 # Register Routes
 app.include_router(datasets.router, prefix=f"{settings.API_V1_STR}/datasets", tags=["datasets"])
 app.include_router(cleaning.router, prefix=f"{settings.API_V1_STR}/cleaning", tags=["cleaning"])
+app.include_router(models.router, prefix=f"{settings.API_V1_STR}/models", tags=["models"])
+app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():

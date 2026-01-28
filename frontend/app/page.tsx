@@ -35,6 +35,8 @@ export default function Home() {
 
       {/* Main Navigation Buttons */}
       <div className="flex flex-wrap justify-center gap-6">
+        
+        {/* Phase 2: Datasets */}
         <Link href="/datasets">
           <button className="bg-blue-600 hover:bg-blue-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-blue-500/20 flex flex-col items-center gap-2 min-w-[200px]">
             <span>📂 Manage Datasets</span>
@@ -42,12 +44,22 @@ export default function Home() {
           </button>
         </Link>
 
+        {/* Phase 3: Cleaning */}
         <Link href="/cleaning">
           <button className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-purple-500/20 flex flex-col items-center gap-2 min-w-[200px]">
             <span>🧹 Data Cleaning</span>
             <span className="text-xs text-purple-200 font-normal">Clean, Filter & Transform</span>
           </button>
         </Link>
+
+        {/* Phase 4: Training */}
+        <Link href="/training">
+          <button className="bg-emerald-600 hover:bg-emerald-500 text-white px-8 py-4 rounded-xl font-bold text-lg transition-all shadow-lg hover:shadow-emerald-500/20 flex flex-col items-center gap-2 min-w-[200px]">
+            <span>🧠 Train Models</span>
+            <span className="text-xs text-emerald-200 font-normal">AutoML & Experiments</span>
+          </button>
+        </Link>
+
       </div>
     </main>
   );
