@@ -5,9 +5,9 @@ from app.db.base import Base
 from app.db.session import engine
 
 # Import Routers
-from app.api import datasets
+from app.api import datasets, cleaning
 
-# Create Tables (Simple Auto-Migration for V1)
+# Create Tables
 Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
@@ -27,8 +27,8 @@ app.add_middleware(
 
 # Register Routes
 app.include_router(datasets.router, prefix=f"{settings.API_V1_STR}/datasets", tags=["datasets"])
+app.include_router(cleaning.router, prefix=f"{settings.API_V1_STR}/cleaning", tags=["cleaning"])
 
-# --- RESTORED TEST ENDPOINT (Fixes the 404) ---
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():
     return {"message": "Backend is connected to Frontend successfully!"}

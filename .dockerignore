@@ -1,0 +1,29 @@
+# Ignore Node
+node_modules
+npm-debug.log
+frontend/node_modules
+frontend/.next
+frontend/out
+frontend/build
+
+# Ignore Python
+__pycache__
+*.pyc
+*.pyo
+*.pyd
+.Python
+env
+venv
+.venv
+pip-log.txt
+pip-delete-this-directory.txt
+backend/app/storage/datasets/*
+backend/app/storage/models/*
+backend/app/storage/artifacts/*
+!backend/app/storage/**/.gitkeep
+backend/app/db/*.sqlite
+
+# Ignore System
+.git
+.gitignore
+.DS_Store
