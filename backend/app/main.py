@@ -1,18 +1,22 @@
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from app.core.config import settings
+from app.db.base import Base
+from app.db.session import engine
+
+# Import Routers
+from app.api import datasets
+
+# Create Tables (Simple Auto-Migration for V1)
+Base.metadata.create_all(bind=engine)
 
 app = FastAPI(
     title=settings.PROJECT_NAME,
     openapi_url=f"{settings.API_V1_STR}/openapi.json"
 )
 
-# CORS ensures Frontend (3000) can talk to Backend (8000)
-origins = [
-    "http://localhost",
-    "http://localhost:3000",
-]
-
+# CORS
+origins = ["http://localhost", "http://localhost:3000"]
 app.add_middleware(
     CORSMiddleware,
     allow_origins=origins,
@@ -21,10 +25,14 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-@app.get("/health")
-def health_check():
-    return {"status": "healthy", "project": "DS-Forge V1"}
+# Register Routes
+app.include_router(datasets.router, prefix=f"{settings.API_V1_STR}/datasets", tags=["datasets"])
 
+# --- RESTORED TEST ENDPOINT (Fixes the 404) ---
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():
     return {"message": "Backend is connected to Frontend successfully!"}
+
+@app.get("/health")
+def health_check():
+    return {"status": "healthy", "project": "DS-Forge V1"}
