@@ -3,6 +3,7 @@ from sqlalchemy.orm import Session
 from pydantic import BaseModel
 from typing import Dict, Any, Optional
 import pandas as pd
+import numpy as np
 import os
 import uuid
 
