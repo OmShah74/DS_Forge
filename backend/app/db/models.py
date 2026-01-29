@@ -33,17 +33,18 @@ class TrainingRun(Base):
     dataset_id = Column(Integer, ForeignKey("datasets.id"))
     
     # Config
-    model_name = Column(String)      # e.g., "RandomForestClassifier"
+    model_name = Column(String)
     target_column = Column(String)
-    parameters = Column(JSON)        # Hyperparameters used
+    parameters = Column(JSON)
     
     # State
-    status = Column(String, default="pending") # pending, running, completed, failed
+    status = Column(String, default="pending") 
     error_message = Column(String, nullable=True)
     
     # Results
-    metrics = Column(JSON, nullable=True)    # {"accuracy": 0.95, "f1": 0.94}
-    artifact_path = Column(String, nullable=True) # Path to .joblib file
+    metrics = Column(JSON, nullable=True)    # Simple metrics (Accuracy, F1)
+    detailed_report = Column(JSON, nullable=True) # Heavy data (Confusion Matrix, ROC points)
+    artifact_path = Column(String, nullable=True) 
     
     created_at = Column(DateTime, default=datetime.utcnow)
     

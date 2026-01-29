@@ -5,7 +5,7 @@ from app.db.base import Base
 from app.db.session import engine
 
 # Import Routers
-from app.api import datasets, cleaning, models, training
+from app.api import datasets, cleaning, models, training, deployment
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -30,6 +30,7 @@ app.include_router(datasets.router, prefix=f"{settings.API_V1_STR}/datasets", ta
 app.include_router(cleaning.router, prefix=f"{settings.API_V1_STR}/cleaning", tags=["cleaning"])
 app.include_router(models.router, prefix=f"{settings.API_V1_STR}/models", tags=["models"])
 app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
+app.include_router(deployment.router, prefix=f"{settings.API_V1_STR}/deployment", tags=["deployment"])
 
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():
