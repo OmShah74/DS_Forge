@@ -18,6 +18,6 @@ export const checkHealth = async () => {
     return response.data;
   } catch (error) {
     console.error("API Connection Error", error);
-    return { message: "Backend unreachable" };
+    return { status: "error", message: "Backend unreachable" };
   }
 };

@@ -1,0 +1,128 @@
+"use client";
+import Link from "next/link";
+import { usePathname } from "next/navigation";
+import {
+  Database, Eraser, BrainCircuit, Activity, Rocket,
+  LayoutGrid, Settings, FlaskConical, Cpu, ChevronLeft, ChevronRight, Zap
+} from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
+import { useUIStore } from "@/store/uiStore";
+
+function cn(...inputs: ClassValue[]) {
+  return twMerge(clsx(inputs));
+}
+
+const menuItems = [
+  { name: "Datasets", href: "/datasets", icon: Database },
+  { name: "Cleaning", href: "/cleaning", icon: Eraser },
+  { name: "Feature Eng", href: "/features", icon: Zap },
+  { name: "Training", href: "/training", icon: BrainCircuit },
+  { name: "Evaluation", href: "/evaluation", icon: Activity },
+  { name: "Deployment", href: "/deployment", icon: Rocket },
+];
+
+export default function Sidebar() {
+  const pathname = usePathname();
+  const { sidebarCollapsed, toggleSidebar } = useUIStore();
+
+  return (
+    <aside className={cn(
+      "fixed left-0 top-0 h-screen glass-panel border-r border-white/5 flex flex-col z-[100] transition-all duration-300 shadow-2xl",
+      sidebarCollapsed ? "w-20" : "w-64"
+    )}>
+      {/* Sidebar Toggle */}
+      <button
+        onClick={toggleSidebar}
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-500 transition-colors z-[110] active:scale-95"
+      >
+        {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
+      </button>
+
+      <div className={cn("p-8", sidebarCollapsed && "px-4 py-8 flex flex-col items-center")}>
+        <div className="flex items-center gap-3 mb-2">
+          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] shrink-0">
+            <Cpu size={24} className="text-white" />
+          </div>
+          {!sidebarCollapsed && (
+            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-gray-400 text-transparent bg-clip-text italic">
+              DS-FORGE
+            </h1>
+          )}
+        </div>
+        {!sidebarCollapsed && (
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">v1.0.0 • CPU-Engine</p>
+          </div>
+        )}
+      </div>
+
+      <nav className="flex-1 px-4 space-y-1.5 mt-4">
+        <Link href="/">
+          <div className={cn(
+            "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative",
+            pathname === "/"
+              ? "bg-white/10 text-white border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
+              : "text-gray-500 hover:text-gray-300 hover:bg-white/5",
+            sidebarCollapsed && "justify-center px-0 h-12"
+          )}>
+            <LayoutGrid size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", pathname === "/" && "text-blue-400")} />
+            {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">Overview</span>}
+            {sidebarCollapsed && (
+              <div className="absolute left-full ml-4 px-2 py-1 rounded bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
+                Overview
+              </div>
+            )}
+          </div>
+        </Link>
+
+        {!sidebarCollapsed && (
+          <div className="pt-6 pb-2 px-4">
+            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.3em]">Processing Pipeline</p>
+          </div>
+        )}
+
+        {menuItems.map((item) => {
+          const isActive = pathname.startsWith(item.href);
+          return (
+            <Link key={item.href} href={item.href}>
+              <div className={cn(
+                "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative",
+                isActive
+                  ? "bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
+                  : "text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent",
+                sidebarCollapsed && "justify-center px-0 h-12"
+              )}>
+                <item.icon size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", isActive && "text-blue-400")} />
+                {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">{item.name}</span>}
+                {sidebarCollapsed && (
+                  <div className="absolute left-full ml-4 px-2 py-1 rounded bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
+                    {item.name}
+                  </div>
+                )}
+              </div>
+            </Link>
+          );
+        })}
+      </nav>
+
+      <div className="p-4 mt-auto border-t border-white/5">
+        <Link href="/settings">
+          <div className={cn(
+            "flex items-center gap-3 px-4 py-3 w-full rounded-xl text-gray-500 hover:text-gray-300 hover:bg-white/5 transition-all group relative",
+            sidebarCollapsed && "justify-center px-0 h-12"
+          )}>
+            <Settings size={18} className="group-hover:rotate-90 transition-transform duration-500 shrink-0" />
+            {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">System Settings</span>}
+            {sidebarCollapsed && (
+              <div className="absolute left-full ml-4 px-2 py-1 rounded bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
+                Settings
+              </div>
+            )}
+          </div>
+        </Link>
+      </div>
+    </aside>
+  );
+}

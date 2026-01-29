@@ -3,7 +3,10 @@ from sqlalchemy.orm import Session
 from typing import List
 from pydantic import BaseModel
 from datetime import datetime
-
+from fastapi.responses import StreamingResponse
+import io
+import pandas as pd
+import numpy as np
 from app.db.session import get_db
 from app.db.models import Dataset
 from app.data.ingestion.loader import IngestionEngine
@@ -23,6 +26,11 @@ class DatasetSchema(BaseModel):
 
     class Config:
         from_attributes = True
+
+class PreviewResponse(BaseModel):
+    columns: list
+    data: list
+    total_rows: int
 
 # --- Endpoints ---
 
@@ -68,3 +76,45 @@ def delete_dataset(dataset_id: int, db: Session = Depends(get_db)):
     db.delete(dataset)
     db.commit()
     return {"message": "Dataset deleted successfully"}
+
+
+@router.get("/{dataset_id}/download")
+def download_dataset(dataset_id: int, db: Session = Depends(get_db)):
+    dataset = db.query(Dataset).filter(Dataset.id == dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    # Read Parquet
+    try:
+        df = pd.read_parquet(dataset.file_path)
+        
+        # Stream as CSV
+        stream = io.StringIO()
+        df.to_csv(stream, index=False)
+        response = StreamingResponse(iter([stream.getvalue()]), media_type="text/csv")
+        response.headers["Content-Disposition"] = f"attachment; filename={dataset.filename}.csv"
+        return response
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error processing file: {str(e)}")
+
+@router.get("/{dataset_id}/preview", response_model=PreviewResponse)
+def get_dataset_preview(dataset_id: int, limit: int = 100, db: Session = Depends(get_db)):
+    """Load first N rows of a dataset for inspection"""
+    dataset = db.query(Dataset).filter(Dataset.id == dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    try:
+        # Read parquet efficiently
+        df = pd.read_parquet(dataset.file_path)
+        
+        # Handle nan values for JSON response (NaN -> None)
+        df = df.replace({np.nan: None})
+        
+        return {
+            "columns": list(df.columns),
+            "data": df.head(limit).to_dict(orient="records"),
+            "total_rows": len(df)
+        }
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=f"Error reading file: {str(e)}")

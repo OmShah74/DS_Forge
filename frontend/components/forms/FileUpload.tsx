@@ -1,7 +1,7 @@
 "use client";
 import { useState } from "react";
 import { api } from "@/lib/api";
-import { UploadCloud, Loader2 } from "lucide-react";
+import { UploadCloud, Loader2, CheckCircle2 } from "lucide-react";
 
 interface FileUploadProps {
     onUploadSuccess: () => void;
@@ -9,6 +9,7 @@ interface FileUploadProps {
 
 export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
     const [isUploading, setIsUploading] = useState(false);
+    const [isSuccess, setIsSuccess] = useState(false);
     const [error, setError] = useState<string | null>(null);
 
     const handleFileChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -17,6 +18,7 @@ export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
         const file = e.target.files[0];
         setIsUploading(true);
         setError(null);
+        setIsSuccess(false);
 
         const formData = new FormData();
         formData.append("file", file);
@@ -25,7 +27,11 @@ export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
             await api.post("/datasets/upload", formData, {
                 headers: { "Content-Type": "multipart/form-data" },
             });
-            onUploadSuccess();
+            setIsSuccess(true);
+            setTimeout(() => {
+                onUploadSuccess();
+                setIsSuccess(false);
+            }, 1000);
         } catch (err: any) {
             setError(err.response?.data?.detail || "Upload failed");
         } finally {
@@ -35,29 +41,44 @@ export default function FileUpload({ onUploadSuccess }: FileUploadProps) {
 
     return (
         <div className="w-full">
-            <label className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-600 border-dashed rounded-lg cursor-pointer bg-gray-700 hover:bg-gray-600 transition-colors">
-                <div className="flex flex-col items-center justify-center pt-5 pb-6">
+            <label className={`
+                flex flex-col items-center justify-center w-full h-40 
+                border-2 border-dashed rounded-2xl cursor-pointer 
+                transition-all duration-300
+                ${isUploading ? 'bg-blue-500/5 border-blue-500/30' :
+                    isSuccess ? 'bg-emerald-500/5 border-emerald-500/30' :
+                        'bg-white/5 border-white/10 hover:bg-white/10 hover:border-blue-500/30'}
+            `}>
+                <div className="flex flex-col items-center justify-center p-6 text-center">
                     {isUploading ? (
-                        <Loader2 className="w-8 h-8 text-blue-500 animate-spin" />
+                        <>
+                            <Loader2 className="w-10 h-10 mb-3 text-blue-500 animate-spin" />
+                            <p className="text-sm font-bold text-blue-400 uppercase tracking-widest">Uploading Core...</p>
+                        </>
+                    ) : isSuccess ? (
+                        <>
+                            <CheckCircle2 className="w-10 h-10 mb-3 text-emerald-500 animate-bounce" />
+                            <p className="text-sm font-bold text-emerald-400 uppercase tracking-widest">Sync Complete</p>
+                        </>
                     ) : (
                         <>
-                            <UploadCloud className="w-8 h-8 mb-3 text-gray-400" />
-                            <p className="mb-2 text-sm text-gray-400">
-                                <span className="font-semibold">Click to upload</span> or drag and drop
+                            <UploadCloud className="w-10 h-10 mb-3 text-gray-500 group-hover:text-blue-400 transition-colors" />
+                            <p className="mb-1 text-sm font-bold text-gray-300">
+                                Click to upload <span className="text-blue-500">or drag-drop</span>
                             </p>
-                            <p className="text-xs text-gray-500">CSV, JSON, XLSX</p>
+                            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-tighter">CSV, JSON, XLSX supported</p>
                         </>
                     )}
                 </div>
-                <input 
-                    type="file" 
-                    className="hidden" 
+                <input
+                    type="file"
+                    className="hidden"
                     accept=".csv,.json,.xlsx"
                     onChange={handleFileChange}
                     disabled={isUploading}
                 />
             </label>
-            {error && <p className="mt-2 text-sm text-red-400">{error}</p>}
+            {error && <p className="mt-3 text-[10px] font-bold text-rose-500 uppercase tracking-widest bg-rose-500/10 p-2 rounded-lg border border-rose-500/20">{error}</p>}
         </div>
     );
 }

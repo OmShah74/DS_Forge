@@ -1,14 +1,87 @@
-@tailwind base;
-@tailwind components;
-@tailwind utilities;
+@import "tailwindcss";
 
 :root {
-  --foreground-rgb: 255, 255, 255;
-  --background-start-rgb: 15, 23, 42;
-  --background-end-rgb: 15, 23, 42;
+  --foreground-rgb: 226, 232, 240;
+  --background-start-rgb: 8, 10, 24;
+  --background-end-rgb: 2, 4, 8;
+  --accent-cyan: 34, 211, 238;
+  --accent-blue: 59, 130, 246;
+  --accent-purple: 168, 85, 247;
 }
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: rgb(var(--background-start-rgb));
+  background: 
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+    rgb(var(--background-start-rgb));
+  background-attachment: fixed;
+  min-height: 100vh;
+  font-feature-settings: "cv02", "cv03", "cv04", "cv11";
+}
+
+/* Custom Scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+}
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Glassmorphism Utilities */
+.glass-panel {
+  background: rgba(15, 23, 42, 0.6);
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+}
+
+.glass-card {
+  background: rgba(30, 41, 59, 0.4);
+  backdrop-filter: blur(8px);
+  border: 1px solid rgba(255, 255, 255, 0.05);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.glass-card:hover {
+  background: rgba(30, 41, 59, 0.6);
+  border-color: rgba(59, 130, 246, 0.3);
+  transform: translateY(-2px);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+}
+
+/* Animations */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 0.5; filter: blur(10px); }
+  50% { opacity: 0.8; filter: blur(15px); }
+}
+
+.animate-glow {
+  animation: pulse-glow 3s infinite ease-in-out;
+}
+
+/* Grid Overlay Utility */
+.grid-overlay {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.05) 1px, transparent 1px);
+  background-size: 24px 24px;
+}
+
+/* Table Utilities */
+.cell-null {
+  background-color: rgba(239, 68, 68, 0.05);
+  color: #fca5a5;
+  font-style: italic;
+}
+.cell-numeric {
+  color: #67e8f9;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
 }

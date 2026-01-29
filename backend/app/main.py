@@ -5,7 +5,7 @@ from app.db.base import Base
 from app.db.session import engine
 
 # Import Routers
-from app.api import datasets, cleaning, models, training, deployment
+from app.api import datasets, cleaning, models, training, deployment, features
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -31,11 +31,19 @@ app.include_router(cleaning.router, prefix=f"{settings.API_V1_STR}/cleaning", ta
 app.include_router(models.router, prefix=f"{settings.API_V1_STR}/models", tags=["models"])
 app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 app.include_router(deployment.router, prefix=f"{settings.API_V1_STR}/deployment", tags=["deployment"])
+app.include_router(features.router, prefix=f"{settings.API_V1_STR}/features", tags=["features"])
 
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():
-    return {"message": "Backend is connected to Frontend successfully!"}
+    return {
+        "status": "ok",
+        "message": "Backend is connected to Frontend successfully!"
+    }
 
 @app.get("/health")
 def health_check():
-    return {"status": "healthy", "project": "DS-Forge V1"}
+    return {
+        "status": "ok",
+        "service": "DS-Forge V1",
+        "health": "healthy"
+    }
