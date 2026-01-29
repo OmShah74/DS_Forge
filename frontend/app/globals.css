@@ -1,9 +1,9 @@
 @import "tailwindcss";
 
 :root {
-  --foreground-rgb: 226, 232, 240;
-  --background-start-rgb: 8, 10, 24;
-  --background-end-rgb: 2, 4, 8;
+  --foreground-rgb: 210, 220, 240;
+  --background-start-rgb: 4, 6, 12;
+  --background-end-rgb: 2, 3, 6;
   --accent-cyan: 34, 211, 238;
   --accent-blue: 59, 130, 246;
   --accent-purple: 168, 85, 247;
@@ -11,9 +11,9 @@
 
 body {
   color: rgb(var(--foreground-rgb));
-  background: 
-    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.15) 0%, transparent 50%),
-    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.1) 0%, transparent 50%),
+  background:
+    radial-gradient(circle at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 40%),
+    radial-gradient(circle at 100% 100%, rgba(168, 85, 247, 0.05) 0%, transparent 40%),
     rgb(var(--background-start-rgb));
   background-attachment: fixed;
   min-height: 100vh;
@@ -25,44 +25,56 @@ body {
   width: 6px;
   height: 6px;
 }
+
 ::-webkit-scrollbar-track {
   background: transparent;
 }
+
 ::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
 }
+
 ::-webkit-scrollbar-thumb:hover {
   background: rgba(255, 255, 255, 0.2);
 }
 
-/* Glassmorphism Utilities */
+/* Glassmorphism Utilities - Darker and more subtle */
 .glass-panel {
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(16px);
-  -webkit-backdrop-filter: blur(16px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.4);
+  background: rgba(8, 12, 24, 0.8);
+  backdrop-filter: blur(24px);
+  -webkit-backdrop-filter: blur(24px);
+  border: 1px solid rgba(255, 255, 255, 0.04);
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.6);
 }
 
 .glass-card {
-  background: rgba(30, 41, 59, 0.4);
-  backdrop-filter: blur(8px);
-  border: 1px solid rgba(255, 255, 255, 0.05);
+  background: rgba(12, 18, 36, 0.5);
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.03);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .glass-card:hover {
-  background: rgba(30, 41, 59, 0.6);
-  border-color: rgba(59, 130, 246, 0.3);
+  background: rgba(15, 23, 42, 0.7);
+  border-color: rgba(168, 85, 247, 0.2);
   transform: translateY(-2px);
-  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.3);
+  box-shadow: 0 15px 45px rgba(0, 0, 0, 0.5);
 }
 
 /* Animations */
 @keyframes pulse-glow {
-  0%, 100% { opacity: 0.5; filter: blur(10px); }
-  50% { opacity: 0.8; filter: blur(15px); }
+
+  0%,
+  100% {
+    opacity: 0.5;
+    filter: blur(10px);
+  }
+
+  50% {
+    opacity: 0.8;
+    filter: blur(15px);
+  }
 }
 
 .animate-glow {
@@ -81,6 +93,7 @@ body {
   color: #fca5a5;
   font-style: italic;
 }
+
 .cell-numeric {
   color: #67e8f9;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;

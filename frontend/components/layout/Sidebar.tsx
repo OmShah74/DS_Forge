@@ -34,26 +34,26 @@ export default function Sidebar() {
       {/* Sidebar Toggle */}
       <button
         onClick={toggleSidebar}
-        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-blue-600 flex items-center justify-center text-white shadow-lg shadow-blue-500/30 hover:bg-blue-500 transition-colors z-[110] active:scale-95"
+        className="absolute -right-3 top-20 w-6 h-6 rounded-full bg-purple-600 flex items-center justify-center text-white shadow-lg shadow-purple-500/30 hover:bg-purple-500 transition-colors z-[110] active:scale-95"
       >
         {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
       <div className={cn("p-8", sidebarCollapsed && "px-4 py-8 flex flex-col items-center")}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-blue-600 flex items-center justify-center shadow-[0_0_20px_rgba(59,130,246,0.5)] shrink-0">
+          <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)] shrink-0">
             <Cpu size={24} className="text-white" />
           </div>
           {!sidebarCollapsed && (
-            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-gray-400 text-transparent bg-clip-text italic">
+            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-gray-500 text-transparent bg-clip-text italic">
               DS-FORGE
             </h1>
           )}
         </div>
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse"></span>
-            <p className="text-[10px] font-bold text-gray-500 uppercase tracking-[0.2em]">v1.0.0 • CPU-Engine</p>
+            <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
+            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">v1.0.0 • CPU-Engine</p>
           </div>
         )}
       </div>
@@ -63,14 +63,14 @@ export default function Sidebar() {
           <div className={cn(
             "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative",
             pathname === "/"
-              ? "bg-white/10 text-white border border-white/10 shadow-[0_0_20px_rgba(255,255,255,0.05)]"
-              : "text-gray-500 hover:text-gray-300 hover:bg-white/5",
+              ? "bg-purple-500/10 text-white border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.05)]"
+              : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]",
             sidebarCollapsed && "justify-center px-0 h-12"
           )}>
-            <LayoutGrid size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", pathname === "/" && "text-blue-400")} />
-            {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">Overview</span>}
+            <LayoutGrid size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", pathname === "/" && "text-purple-400")} />
+            {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight text-gray-300">Overview</span>}
             {sidebarCollapsed && (
-              <div className="absolute left-full ml-4 px-2 py-1 rounded bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
+              <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
                 Overview
               </div>
             )}
@@ -78,8 +78,8 @@ export default function Sidebar() {
         </Link>
 
         {!sidebarCollapsed && (
-          <div className="pt-6 pb-2 px-4">
-            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.3em]">Processing Pipeline</p>
+          <div className="pt-6 pb-2 px-4 text-center">
+            <p className="text-[9px] font-black text-gray-700 uppercase tracking-[0.4em] border-b border-white/5 pb-2">Pipeline Architecture</p>
           </div>
         )}
 
@@ -90,14 +90,14 @@ export default function Sidebar() {
               <div className={cn(
                 "flex items-center gap-3 px-4 py-3 rounded-xl transition-all duration-300 group relative",
                 isActive
-                  ? "bg-blue-600/10 text-blue-400 border border-blue-500/20 shadow-[0_0_20px_rgba(59,130,246,0.1)]"
-                  : "text-gray-500 hover:text-gray-300 hover:bg-white/5 border border-transparent",
+                  ? "bg-purple-600/10 text-purple-300 border border-purple-500/20 shadow-[0_0_20px_rgba(168,85,247,0.1)]"
+                  : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.02] border border-transparent",
                 sidebarCollapsed && "justify-center px-0 h-12"
               )}>
-                <item.icon size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", isActive && "text-blue-400")} />
+                <item.icon size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", isActive && "text-purple-400")} />
                 {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">{item.name}</span>}
                 {sidebarCollapsed && (
-                  <div className="absolute left-full ml-4 px-2 py-1 rounded bg-gray-800 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
+                  <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
                     {item.name}
                   </div>
                 )}

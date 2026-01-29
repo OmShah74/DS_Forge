@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import MainContentWrapper from "@/components/layout/MainContentWrapper";
+import ToastContainer from "@/components/ToastContainer";
 
 export const metadata: Metadata = {
   title: "DS-Forge | Data Science OS",
@@ -15,11 +16,12 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className="dark">
-      <body className="flex bg-[#080a18] selection:bg-blue-500/30">
+      <body className="flex bg-[#04060c] selection:bg-purple-500/30">
         <Sidebar />
         <MainContentWrapper>
           {children}
         </MainContentWrapper>
+        <ToastContainer />
       </body>
     </html>
   );

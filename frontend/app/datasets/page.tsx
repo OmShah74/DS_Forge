@@ -6,7 +6,10 @@ import FileUpload from "@/components/forms/FileUpload";
 import DataGrid from "@/components/DataGrid";
 import { Trash2, Database, FileText, BarChart3, Clock, ArrowRight, Loader2 } from "lucide-react";
 
+import { useNotificationStore } from "@/store/notificationStore";
+
 export default function DatasetsPage() {
+    const { addToast, showConfirm } = useNotificationStore();
     const [datasets, setDatasets] = useState<Dataset[]>([]);
     const [loading, setLoading] = useState(true);
 
@@ -62,7 +65,7 @@ export default function DatasetsPage() {
             setPreviewData(res.data);
         } catch (error) {
             console.error("Failed to fetch preview", error);
-            alert("Could not load preview");
+            addToast("Synchronicity Error: Could not retrieve data stream", "error");
             setInspectingId(null);
         } finally {
             setIsFetchingPreview(false);
@@ -70,13 +73,19 @@ export default function DatasetsPage() {
     };
 
     const deleteDataset = async (id: number) => {
-        if (!confirm("Are you sure you want to delete this dataset?")) return;
-        try {
-            await api.delete(`/datasets/${id}`);
-            fetchDatasets();
-        } catch (error) {
-            alert("Failed to delete dataset");
-        }
+        showConfirm({
+            title: "Destructive Action",
+            message: "You are about to purge this data artifact from the system registry. This cannot be reversed.",
+            onConfirm: async () => {
+                try {
+                    await api.delete(`/datasets/${id}`);
+                    addToast("Registry Updated: Artifact Purged", "success");
+                    fetchDatasets();
+                } catch (error) {
+                    addToast("System Fault: Failed to delete artifact", "error");
+                }
+            }
+        });
     };
 
     useEffect(() => {

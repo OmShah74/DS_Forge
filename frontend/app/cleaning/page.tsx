@@ -12,13 +12,22 @@ function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
 }
 
+import { useNotificationStore } from "@/store/notificationStore";
+
 interface PreviewData {
     columns: string[];
     data: any[];
     total_rows: number;
 }
 
+interface OperationAudit {
+    id: string;
+    operation: string;
+    timestamp: string;
+}
+
 export default function CleaningPage() {
+    const { addToast, notifySystem } = useNotificationStore();
     const [datasets, setDatasets] = useState<Dataset[]>([]);
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [preview, setPreview] = useState<PreviewData | null>(null);
@@ -27,7 +36,7 @@ export default function CleaningPage() {
     const [operation, setOperation] = useState("drop_missing");
     const [params, setParams] = useState<any>({});
     const [loading, setLoading] = useState(false);
-    const [statusText, setStatusText] = useState<string | null>(null);
+    const [auditLog, setAuditLog] = useState<OperationAudit[]>([]);
 
     useEffect(() => {
         api.get("/datasets/").then((res) => setDatasets(res.data));
@@ -52,23 +61,32 @@ export default function CleaningPage() {
     const handleApply = async () => {
         if (!selectedId) return;
         setLoading(true);
-        setStatusText("Executing Pipeline...");
+
         try {
             await api.post("/cleaning/apply", {
                 dataset_id: selectedId,
                 operation: operation,
-                params: params // Already an object from CleaningControls
+                params: params
             });
 
-            setStatusText("Success! Artifact Created");
+            addToast("Mutation Successful: Data artifact updated", "success");
+            notifySystem("Pipeline Complete", `Successfully applied ${operation.replace(/_/g, ' ')} to dataset.`);
+
+            // Add to audit log
+            const audit: OperationAudit = {
+                id: Math.random().toString(36).substring(7),
+                operation,
+                timestamp: new Date().toLocaleTimeString()
+            };
+            setAuditLog(prev => [audit, ...prev].slice(0, 5));
+
             // Reload datasets list
             const res = await api.get("/datasets/");
             setDatasets(res.data);
-            setTimeout(() => setStatusText(null), 3000);
 
         } catch (error: any) {
-            alert(error.response?.data?.detail || "Operation failed");
-            setStatusText("Pipeline Aborted");
+            const msg = error.response?.data?.detail || "Operation failed";
+            addToast(msg, "error");
         } finally {
             setLoading(false);
         }
@@ -87,8 +105,8 @@ export default function CleaningPage() {
 
             <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
                 {/* Left: Source Registry */}
-                <div className="w-80 flex flex-col space-y-4 shrink-0">
-                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-full border-white/5 overflow-hidden shadow-2xl">
+                <div className="w-80 flex flex-col space-y-6 shrink-0">
+                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl">
                         <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
                             <Database size={14} className="text-purple-500" />
                             <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Source Registry</h2>
@@ -101,21 +119,42 @@ export default function CleaningPage() {
                                     className={`
                                         p-4 rounded-xl cursor-pointer transition-all border group relative overflow-hidden
                                         ${selectedId === ds.id
-                                            ? 'bg-purple-500/10 border-purple-500/30 text-purple-400'
-                                            : 'bg-white/[0.02] border-white/5 text-gray-500 hover:bg-white/5 hover:text-gray-300'}
+                                            ? 'bg-purple-500/10 border-purple-500/20 text-purple-400'
+                                            : 'bg-white/[0.01] border-white/5 text-gray-500 hover:bg-white/5 hover:text-gray-300'}
                                     `}
                                 >
                                     {selectedId === ds.id && (
-                                        <div className="absolute left-0 top-0 w-1 h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                                        <div className="absolute left-0 top-0 w-1 h-full bg-purple-500"></div>
                                     )}
                                     <p className="font-bold text-sm truncate">{ds.filename}</p>
                                     <div className="flex items-center gap-2 mt-2">
                                         <span className="text-[9px] font-black opacity-60 uppercase tracking-tighter">{ds.row_count} rows</span>
-                                        <span className="w-1 h-1 rounded-full bg-white/10"></span>
-                                        <span className="text-[9px] font-black opacity-60 uppercase tracking-tighter">ID: {ds.id}</span>
                                     </div>
                                 </div>
                             ))}
+                        </div>
+                    </div>
+
+                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl bg-black/40">
+                        <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
+                            <RefreshCw size={14} className="text-purple-500" />
+                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Pipeline History</h2>
+                        </div>
+                        <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
+                            {auditLog.length > 0 ? auditLog.map(log => (
+                                <div key={log.id} className="p-3 rounded-lg border border-white/5 bg-white/[0.02] space-y-1">
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-tighter">{log.operation}</span>
+                                        <span className="text-[9px] font-bold text-gray-600">{log.timestamp}</span>
+                                    </div>
+                                    <p className="text-[10px] text-gray-500 italic">Mutation complete</p>
+                                </div>
+                            )) : (
+                                <div className="h-full flex flex-col items-center justify-center opacity-20 py-8">
+                                    <Layers size={24} className="mb-2" />
+                                    <p className="text-[9px] font-bold uppercase tracking-widest">No mutations recorded</p>
+                                </div>
+                            )}
                         </div>
                     </div>
                 </div>
@@ -129,20 +168,20 @@ export default function CleaningPage() {
                                 <div className="space-y-1.5 flex-1 max-w-sm">
                                     <label className="text-[10px] font-black text-purple-500 uppercase tracking-[0.2em] px-1">Control Console</label>
                                     <select
-                                        className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
                                         value={operation}
                                         onChange={(e) => setOperation(e.target.value)}
                                     >
-                                        <optgroup label="Missing Data" className="bg-[#0a0c14]">
+                                        <optgroup label="Missing Data" className="bg-[#04060c]">
                                             <option value="drop_missing">Drop Missing Rows</option>
                                             <option value="fill_missing">Fill Missing Values</option>
                                         </optgroup>
-                                        <optgroup label="Feature Engineering" className="bg-[#0a0c14]">
+                                        <optgroup label="Feature Engineering" className="bg-[#04060c]">
                                             <option value="rename_columns">Rename Columns (Header Sanitization)</option>
                                             <option value="drop_columns">Drop Features (Columns)</option>
                                             <option value="convert_type">Cast / Convert Type</option>
                                         </optgroup>
-                                        <optgroup label="Quality Control" className="bg-[#0a0c14]">
+                                        <optgroup label="Quality Control" className="bg-[#04060c]">
                                             <option value="drop_duplicates">Remove Duplicates</option>
                                             <option value="remove_outliers_zscore">Outliers (Z-Score)</option>
                                             <option value="remove_outliers_iqr">Outliers (IQR)</option>
@@ -152,22 +191,13 @@ export default function CleaningPage() {
                                 </div>
 
                                 <div className="flex items-center gap-4 shrink-0">
-                                    {statusText && (
-                                        <div className={cn(
-                                            "flex items-center gap-2 text-[10px] font-black uppercase tracking-widest px-4 py-3 rounded-xl bg-purple-500/5 border border-purple-500/20 animate-in fade-in slide-in-from-right-2",
-                                            statusText.includes('Success') ? "text-emerald-400" : "text-purple-400"
-                                        )}>
-                                            {statusText.includes('Success') ? <CheckCircle2 size={12} /> : <AlertCircle size={12} />}
-                                            {statusText}
-                                        </div>
-                                    )}
                                     <button
                                         onClick={handleApply}
                                         disabled={loading || !selectedId}
                                         className={cn(
                                             "px-8 h-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all active:scale-95 shadow-lg",
                                             loading || !selectedId
-                                                ? "bg-white/5 text-gray-600 cursor-not-allowed border border-white/5"
+                                                ? "bg-white/5 text-gray-700 cursor-not-allowed border border-white/5"
                                                 : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
                                         )}
                                     >

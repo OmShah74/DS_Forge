@@ -2,9 +2,11 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { TrainingRun } from "@/lib/types";
-import { BarChart, TrendingUp, Grid } from "lucide-react";
+import { BarChart, TrendingUp, Grid, Activity } from "lucide-react";
+import { useNotificationStore } from "@/store/notificationStore";
 
 export default function EvaluationPage() {
+    const { addToast } = useNotificationStore();
     const [runs, setRuns] = useState<TrainingRun[]>([]);
     const [selectedRun, setSelectedRun] = useState<TrainingRun | null>(null);
 
@@ -19,22 +21,24 @@ export default function EvaluationPage() {
         const classes = report.classes || [];
 
         return (
-            <div className="mt-4">
-                <h3 className="font-bold mb-2">Confusion Matrix</h3>
-                <div className="overflow-x-auto">
-                    <table className="text-center border-collapse">
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 px-1">Classification Matrix</h3>
+                <div className="overflow-x-auto glass-panel rounded-2xl border-white/5 bg-black/40 p-4">
+                    <table className="w-full text-center border-collapse">
                         <thead>
                             <tr>
-                                <th className="p-2 border border-gray-600 bg-gray-900">Act \ Pred</th>
-                                {classes.map((c: string) => <th key={c} className="p-2 border border-gray-600 bg-gray-900">{c}</th>)}
+                                <th className="p-4 border-b border-white/5 text-[9px] font-black text-purple-500 uppercase tracking-widest">Act \ Pred</th>
+                                {classes.map((c: string) => (
+                                    <th key={c} className="p-4 border-b border-white/5 text-[9px] font-black text-gray-400 uppercase tracking-widest">{c}</th>
+                                ))}
                             </tr>
                         </thead>
                         <tbody>
                             {matrix.map((row: number[], i: number) => (
-                                <tr key={i}>
-                                    <td className="p-2 border border-gray-600 bg-gray-900 font-bold">{classes[i]}</td>
+                                <tr key={i} className="hover:bg-white/[0.02] transition-colors">
+                                    <td className="p-4 border-r border-white/5 text-[10px] font-black text-gray-400 uppercase">{classes[i]}</td>
                                     {row.map((val, j) => (
-                                        <td key={j} className={`p-2 border border-gray-600 ${i === j ? 'bg-green-900/50' : ''}`}>
+                                        <td key={j} className={`p-4 text-xs font-mono font-bold ${i === j ? 'text-emerald-400' : 'text-gray-600'}`}>
                                             {val}
                                         </td>
                                     ))}
@@ -51,104 +55,149 @@ export default function EvaluationPage() {
     const renderRegressionAnalysis = (report: any) => {
         if (!report || !report.actual) return null;
         return (
-            <div className="mt-4">
-                <h3 className="font-bold mb-2">Actual vs Predicted (Sample)</h3>
-                <div className="bg-gray-900 p-4 rounded border border-gray-700 font-mono text-sm max-h-60 overflow-y-auto">
-                    <div className="grid grid-cols-2 gap-4 border-b border-gray-600 pb-2 mb-2 font-bold text-gray-400">
-                        <span>Actual</span>
-                        <span>Predicted</span>
+            <div className="mt-8 animate-in fade-in slide-in-from-bottom-2 duration-500">
+                <h3 className="text-[10px] font-black text-gray-500 uppercase tracking-widest mb-4 px-1">Regression Variance Stream</h3>
+                <div className="glass-panel rounded-2xl border-white/5 bg-black/40 p-6 overflow-hidden">
+                    <div className="grid grid-cols-2 gap-8 border-b border-white/5 pb-4 mb-4">
+                        <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest">Target Artifact (Actual)</span>
+                        <span className="text-[9px] font-black text-purple-500 uppercase tracking-widest">Inference Out (Predicted)</span>
                     </div>
-                    {report.actual.map((act: number, i: number) => (
-                        <div key={i} className="grid grid-cols-2 gap-4 py-1 hover:bg-gray-800">
-                            <span>{act.toFixed(2)}</span>
-                            <span className={Math.abs(act - report.predicted[i]) > (act * 0.1) ? "text-red-400" : "text-green-400"}>
-                                {report.predicted[i].toFixed(2)}
-                            </span>
-                        </div>
-                    ))}
+                    <div className="space-y-2 max-h-80 overflow-y-auto pr-2 custom-scrollbar">
+                        {report.actual.map((act: number, i: number) => (
+                            <div key={i} className="grid grid-cols-2 gap-8 py-2 border-b border-white/[0.02] last:border-0 group">
+                                <span className="text-xs font-mono font-bold text-gray-400">{act.toFixed(4)}</span>
+                                <span className={`text-xs font-mono font-bold ${Math.abs(act - report.predicted[i]) > (act * 0.1) ? "text-rose-500" : "text-emerald-500"}`}>
+                                    {report.predicted[i].toFixed(4)}
+                                </span>
+                            </div>
+                        ))}
+                    </div>
                 </div>
             </div>
         );
     };
 
     return (
-        <main className="min-h-screen bg-slate-900 text-white p-8 flex gap-6">
+        <div className="h-[calc(100vh-100px)] flex gap-10 animate-in fade-in duration-700">
             {/* Sidebar List */}
-            <div className="w-1/3 bg-gray-800 p-4 rounded-xl border border-gray-700 h-[90vh] overflow-y-auto">
-                <h2 className="text-xl font-bold mb-4 flex items-center gap-2">
-                    <BarChart className="text-yellow-500"/> Completed Models
-                </h2>
-                <div className="space-y-2">
-                    {runs.filter(r => r.status === 'completed').map(run => (
-                        <div 
-                            key={run.id}
-                            onClick={() => setSelectedRun(run)}
-                            className={`p-4 rounded-lg cursor-pointer border border-transparent transition-all ${selectedRun?.id === run.id ? 'bg-blue-900/40 border-blue-500' : 'bg-gray-700 hover:bg-gray-600'}`}
-                        >
-                            <div className="flex justify-between items-start">
-                                <h3 className="font-bold">{run.model_name}</h3>
-                                <span className="text-xs bg-gray-900 px-2 py-1 rounded">#{run.id}</span>
-                            </div>
-                            <div className="flex gap-2 mt-2 text-xs text-gray-300">
-                                {run.metrics && Object.entries(run.metrics).map(([k, v]) => (
-                                    <span key={k}>{k}: {typeof v === 'number' ? v.toFixed(3) : v}</span>
-                                ))}
-                            </div>
+            <div className="w-96 glass-panel rounded-3xl border-white/5 bg-black/20 flex flex-col overflow-hidden shadow-2xl">
+                <div className="p-6 border-b border-white/5 shrink-0 bg-black/20">
+                    <div className="flex items-center justify-between mb-4">
+                        <div className="flex items-center gap-2">
+                            <BarChart className="text-purple-500" size={14} />
+                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Model Registry</h2>
                         </div>
-                    ))}
+                        <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Completed Only</span>
+                    </div>
+                </div>
+
+                <div className="flex-1 overflow-y-auto p-4 space-y-3 custom-scrollbar">
+                    {runs.filter(r => r.status === 'completed').length === 0 ? (
+                        <div className="h-full flex flex-col items-center justify-center text-gray-700 opacity-20 italic p-8 text-center">
+                            <BarChart size={48} className="mb-4" />
+                            <p className="text-xs font-black uppercase tracking-[0.4em]">No validated models found</p>
+                        </div>
+                    ) : (
+                        runs.filter(r => r.status === 'completed').map(run => (
+                            <div
+                                key={run.id}
+                                onClick={() => setSelectedRun(run)}
+                                className={`
+                                    p-5 rounded-2xl cursor-pointer transition-all border group relative overflow-hidden
+                                    ${selectedRun?.id === run.id
+                                        ? 'bg-purple-500/10 border-purple-500/20 text-purple-400 shadow-xl'
+                                        : 'bg-white/[0.01] border-white/5 text-gray-500 hover:bg-white/5 hover:text-gray-300'}
+                                `}
+                            >
+                                <div className="flex justify-between items-start mb-3">
+                                    <h3 className="font-black text-sm uppercase tracking-tight truncate max-w-[180px]">{run.model_name}</h3>
+                                    <span className="text-[9px] font-mono font-black opacity-40 bg-black/40 px-2 py-0.5 rounded">#{run.id}</span>
+                                </div>
+                                <div className="grid grid-cols-2 gap-2">
+                                    {run.metrics && Object.entries(run.metrics).slice(0, 2).map(([k, v]) => (
+                                        <div key={k} className="flex flex-col">
+                                            <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{k}</span>
+                                            <span className="text-xs font-mono font-bold">{typeof v === 'number' ? v.toFixed(3) : v}</span>
+                                        </div>
+                                    ))}
+                                </div>
+                                {selectedRun?.id === run.id && (
+                                    <div className="absolute left-0 top-0 w-1 h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
+                                )}
+                            </div>
+                        ))
+                    )}
                 </div>
             </div>
 
             {/* Main Content */}
-            <div className="flex-1 bg-gray-800 p-8 rounded-xl border border-gray-700 overflow-y-auto h-[90vh]">
+            <div className="flex-1 glass-panel rounded-3xl border-white/5 bg-black/40 flex flex-col overflow-hidden shadow-2xl relative">
                 {selectedRun ? (
-                    <div>
-                        <h1 className="text-3xl font-bold mb-6 flex items-center gap-3">
-                            <TrendingUp className="text-green-500"/> Performance Report
-                        </h1>
-                        
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 mb-8">
-                            <div className="bg-gray-900 p-6 rounded-lg border border-gray-600">
-                                <h3 className="text-gray-400 text-sm uppercase mb-2">Primary Metrics</h3>
-                                {selectedRun.metrics && Object.entries(selectedRun.metrics).map(([k, v]) => (
-                                    <div key={k} className="flex justify-between border-b border-gray-700 py-2 last:border-0">
-                                        <span className="capitalize">{k.replace('_', ' ')}</span>
-                                        <span className="font-mono font-bold text-xl">{typeof v === 'number' ? v.toFixed(4) : v}</span>
-                                    </div>
-                                ))}
+                    <div className="flex-1 overflow-y-auto p-10 custom-scrollbar">
+                        <header className="flex items-center justify-between mb-12 animate-in fade-in slide-in-from-top-2 duration-500">
+                            <div className="space-y-2">
+                                <div className="flex items-center gap-3">
+                                    <TrendingUp className="text-emerald-500" size={24} />
+                                    <h1 className="text-3xl font-black text-white italic font-mono uppercase tracking-tight">Telemetry <span className="text-purple-600">Report</span></h1>
+                                </div>
+                                <p className="text-gray-500 text-[10px] font-bold uppercase tracking-widest px-1">Deep analysis of logic artifact validation phase</p>
                             </div>
-                            
-                            <div className="bg-gray-900 p-6 rounded-lg border border-gray-600">
-                                <h3 className="text-gray-400 text-sm uppercase mb-2">Run Details</h3>
-                                <p className="py-1"><span className="text-gray-500">Target:</span> {selectedRun.target_column || "N/A"}</p>
-                                <p className="py-1"><span className="text-gray-500">Date:</span> {new Date(selectedRun.created_at).toLocaleString()}</p>
+                            <div className="flex gap-4">
+                                <div className="bg-black/40 border border-white/5 rounded-2xl px-6 py-3 text-right">
+                                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em] mb-1">Target Vector</p>
+                                    <p className="text-xs font-black text-purple-400 uppercase">{selectedRun.target_column || "UNSPECIFIED"}</p>
+                                </div>
+                                <div className="bg-black/40 border border-white/5 rounded-2xl px-6 py-3 text-right">
+                                    <p className="text-[8px] font-black text-gray-600 uppercase tracking-[0.2em] mb-1">Compute Date</p>
+                                    <p className="text-xs font-black text-gray-300 uppercase">{new Date(selectedRun.created_at).toLocaleDateString()}</p>
+                                </div>
                             </div>
+                        </header>
+
+                        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+                            {selectedRun.metrics && Object.entries(selectedRun.metrics).map(([k, v]) => (
+                                <div key={k} className="glass-panel p-6 rounded-2xl border-white/5 bg-white/[0.01] hover:bg-white/[0.03] transition-colors group shadow-xl">
+                                    <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em] mb-3 group-hover:text-purple-500 transition-colors">{k.replace('_', ' ')}</h3>
+                                    <p className="text-3xl font-mono font-black text-white">{typeof v === 'number' ? v.toFixed(6) : v}</p>
+                                </div>
+                            ))}
                         </div>
 
                         {/* Detailed Reports */}
-                        <div className="bg-gray-900 p-6 rounded-lg border border-gray-600">
-                            <h3 className="text-xl font-bold mb-4 flex items-center gap-2">
-                                <Grid size={20}/> Deep Analysis
-                            </h3>
-                            {/* @ts-ignore - detailed_report exists in backend but needs typing */}
-                            {selectedRun.detailed_report?.type === 'classification' 
+                        <div className="space-y-4">
+                            <div className="flex items-center gap-3 mb-6">
+                                <Grid className="text-purple-500/40" size={16} />
+                                <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.5em]">Logic Topology Analysis</h3>
+                            </div>
+
+                            {/* @ts-ignore */}
+                            {selectedRun.detailed_report?.type === 'classification'
                                 // @ts-ignore
-                                ? renderConfusionMatrix(selectedRun.detailed_report) 
+                                ? renderConfusionMatrix(selectedRun.detailed_report)
                                 // @ts-ignore
                                 : renderRegressionAnalysis(selectedRun.detailed_report)
                             }
+
                             {/* @ts-ignore */}
-                            {!selectedRun.detailed_report && <p className="text-gray-500 italic">No detailed report available (Re-train model to generate).</p>}
+                            {!selectedRun.detailed_report && (
+                                <div className="glass-panel p-20 rounded-3xl border-dashed border-white/5 bg-black/20 flex flex-col items-center justify-center text-gray-700">
+                                    <Activity size={32} className="mb-4 opacity-50" />
+                                    <p className="text-[10px] font-black uppercase tracking-[0.3em]">Extended diagnostics not generated during training</p>
+                                </div>
+                            )}
                         </div>
 
                     </div>
                 ) : (
-                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
-                        <BarChart size={64} className="mb-4 opacity-50"/>
-                        <p className="text-xl">Select a model to view evaluation metrics</p>
+                    <div className="flex-1 flex flex-col items-center justify-center text-gray-700 opacity-20 italic">
+                        <BarChart size={80} className="mb-6" />
+                        <p className="text-sm font-black uppercase tracking-[0.5em]">Select Core Logic to Initiate Telemetry</p>
                     </div>
                 )}
+
+                {/* Visual decoration */}
+                <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/[0.02] blur-[100px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
-        </main>
+        </div>
     );
 }

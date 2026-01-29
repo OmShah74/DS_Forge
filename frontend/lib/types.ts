@@ -17,8 +17,10 @@ export interface ModelOption {
 export interface TrainingRun {
     id: number;
     model_name: string;
+    target_column?: string;
     status: "pending" | "running" | "completed" | "failed";
     metrics: Record<string, number> | null;
+    detailed_report?: any;
     error_message: string | null;
     created_at: string;
 }

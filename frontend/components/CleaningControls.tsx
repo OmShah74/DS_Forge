@@ -1,8 +1,8 @@
 "use client";
-import React, { useState, useEffect } from 'react';
-import { Settings2, Plus, X, HelpCircle, ArrowRightLeft } from 'lucide-react';
-import { clsx, type ClassValue } from 'clsx';
-import { twMerge } from 'tailwind-merge';
+import React, { useEffect, useState } from "react";
+import { Settings2, HelpCircle, ArrowRight, Trash2, Edit3, Type } from "lucide-react";
+import { clsx, type ClassValue } from "clsx";
+import { twMerge } from "tailwind-merge";
 
 function cn(...inputs: ClassValue[]) {
     return twMerge(clsx(inputs));
@@ -17,94 +17,71 @@ interface CleaningControlsProps {
 export default function CleaningControls({ operation, columns, onParamsChange }: CleaningControlsProps) {
     const [params, setParams] = useState<any>({});
 
-    // Reset params when operation changes
     useEffect(() => {
-        const defaults: any = {
-            drop_missing: { axis: 0, threshold: null, subset: [] },
-            fill_missing: { method: 'value', value: '', columns: [] },
-            drop_duplicates: { subset: [], keep: 'first' },
-            drop_columns: { columns: [] },
-            rename_columns: { mapping: {} },
-            convert_type: { column: '', type: 'numeric' },
-            remove_outliers_zscore: { columns: [], threshold: 3.0 },
-            remove_outliers_iqr: { columns: [] },
-            text_clean: { column: '', action: 'lower' },
-        };
-        const newParams = defaults[operation] || {};
-        setParams(newParams);
-        onParamsChange(newParams);
-    }, [operation, onParamsChange]);
+        onParamsChange(params);
+    }, [params, onParamsChange]);
 
     const updateParam = (key: string, value: any) => {
-        const newParams = { ...params, [key]: value };
-        setParams(newParams);
-        onParamsChange(newParams);
+        setParams((prev: any) => ({ ...prev, [key]: value }));
     };
 
-    const toggleColumnInList = (listKey: string, column: string) => {
-        const currentList = params[listKey] || [];
-        const newList = currentList.includes(column)
-            ? currentList.filter((c: string) => c !== column)
-            : [...currentList, column];
-        updateParam(listKey, newList);
-    };
-
-    // Special handler for renaming
-    const updateRenameMapping = (oldName: string, newName: string) => {
-        const newMapping = { ...(params.mapping || {}), [oldName]: newName };
-        if (newName === "" || newName === oldName) {
-            delete newMapping[oldName];
-        }
-        updateParam('mapping', newMapping);
-    };
-
-    const renderMultiSelect = (label: string, listKey: string) => (
-        <div className="space-y-3">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                {label} <span className="text-[9px] text-gray-600 font-bold lowercase italic">(Select multiple)</span>
-            </label>
-            <div className="flex flex-wrap gap-2 max-h-32 overflow-y-auto p-1 custom-scrollbar">
-                {columns.map(col => (
-                    <button
-                        key={col}
-                        onClick={() => toggleColumnInList(listKey, col)}
-                        className={cn(
-                            "px-3 py-1.5 rounded-lg text-[10px] font-bold border transition-all active:scale-95",
-                            params[listKey]?.includes(col)
-                                ? "bg-purple-500/20 border-purple-500/50 text-purple-300"
-                                : "bg-white/5 border-white/10 text-gray-500 hover:border-white/20 hover:text-gray-300"
-                        )}
-                    >
-                        {col}
-                    </button>
-                ))}
-            </div>
+    const renderInput = (label: string, key: string, type: string = "text", placeholder: string = "") => (
+        <div className="space-y-2">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">{label}</label>
+            <input
+                type={type}
+                value={params[key] ?? ""}
+                onChange={(e) => updateParam(key, type === "number" ? (e.target.value === "" ? null : parseFloat(e.target.value)) : e.target.value)}
+                placeholder={placeholder}
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-3.5 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-800 font-mono"
+            />
         </div>
     );
 
     const renderDropdown = (label: string, key: string, options: { value: string, label: string }[]) => (
         <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</label>
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">{label}</label>
             <select
-                value={params[key] || ''}
+                value={params[key] ?? ""}
                 onChange={(e) => updateParam(key, e.target.value)}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all"
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-3.5 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer"
             >
-                {options.map(opt => <option key={opt.value} value={opt.value}>{opt.label}</option>)}
+                <option value="" className="bg-[#04060c]">Select...</option>
+                {options.map(opt => (
+                    <option key={opt.value} value={opt.value} className="bg-[#04060c]">{opt.label}</option>
+                ))}
             </select>
         </div>
     );
 
-    const renderInput = (label: string, key: string, type: string = "text", placeholder: string = "") => (
-        <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest">{label}</label>
-            <input
-                type={type}
-                value={params[key] ?? ''}
-                onChange={(e) => updateParam(key, type === 'number' ? parseFloat(e.target.value) : e.target.value)}
-                placeholder={placeholder}
-                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-700 font-mono"
-            />
+    const renderMultiSelect = (label: string, key: string) => (
+        <div className="space-y-3">
+            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">{label}</label>
+            <div className="flex flex-wrap gap-2 p-4 bg-black/40 border border-white/5 rounded-2xl min-h-[60px]">
+                {columns.map(col => {
+                    const isSelected = params[key]?.includes(col);
+                    return (
+                        <button
+                            key={col}
+                            onClick={() => {
+                                const current = params[key] || [];
+                                const next = isSelected
+                                    ? current.filter((c: string) => c !== col)
+                                    : [...current, col];
+                                updateParam(key, next);
+                            }}
+                            className={cn(
+                                "px-3 py-1.5 rounded-lg text-[10px] font-bold transition-all border",
+                                isSelected
+                                    ? "bg-purple-500/20 border-purple-500/40 text-purple-300"
+                                    : "bg-white/[0.02] border-white/5 text-gray-600 hover:border-white/10 hover:text-gray-400"
+                            )}
+                        >
+                            {col}
+                        </button>
+                    );
+                })}
+            </div>
         </div>
     );
 
@@ -141,7 +118,7 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                     <>
                         {renderDropdown("Axis", "axis", [{ value: "0", label: "Rows (Any NaN drops row)" }, { value: "1", label: "Columns (Any NaN drops col)" }])}
                         <div className="space-y-2">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
+                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2 px-1">
                                 Threshold <span title="Keep rows/cols with at least this many non-NaN values"><HelpCircle size={10} className="text-purple-400 cursor-help" /></span>
                             </label>
                             <input
@@ -149,7 +126,7 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                                 value={params['threshold'] ?? ''}
                                 onChange={(e) => updateParam('threshold', e.target.value === '' ? null : parseInt(e.target.value))}
                                 placeholder="Min non-NaN cells..."
-                                className="w-full bg-white/5 border border-white/10 rounded-xl p-3 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-700 font-mono"
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-3.5 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-800 font-mono"
                             />
                         </div>
                         <div className="md:col-span-2">
@@ -160,102 +137,97 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
 
                 {operation === "fill_missing" && (
                     <>
-                        {renderDropdown("Method", "method", [
-                            { value: "value", label: "Fixed Value" },
-                            { value: "mean", label: "Mean (Numeric)" },
-                            { value: "median", label: "Median (Numeric)" },
-                            { value: "mode", label: "Mode (Frequent)" },
-                            { value: "ffill", label: "Forward Fill" },
-                            { value: "bfill", label: "Backward Fill" }
+                        {renderDropdown("Strategy", "method", [
+                            { value: "mean", label: "Statistical Mean" },
+                            { value: "median", label: "Statistical Median" },
+                            { value: "constant", label: "Fixed Value" }
                         ])}
-                        {params.method === 'value' && renderInput("Value to fill", "value", "text", "Enter value...")}
+                        {params['method'] === 'constant' && renderInput("Constant Value", "value")}
                         <div className="md:col-span-2">
-                            {renderMultiSelect("Columns to Fill", "columns")}
+                            {renderMultiSelect("Columns to Impute", "subset")}
                         </div>
                     </>
-                )}
-
-                {operation === "drop_duplicates" && (
-                    <>
-                        {renderDropdown("Keep", "keep", [{ value: "first", label: "Keep First" }, { value: "last", label: "Keep Last" }, { value: "False", label: "Drop All" }])}
-                        <div className="md:col-span-2">
-                            {renderMultiSelect("Columns to check for Duplication", "subset")}
-                        </div>
-                    </>
-                )}
-
-                {operation === "drop_columns" && (
-                    <div className="md:col-span-2">
-                        {renderMultiSelect("Select Columns to Remove", "columns")}
-                    </div>
                 )}
 
                 {operation === "rename_columns" && (
-                    <div className="md:col-span-2 space-y-6">
-                        <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                            Map Column Names <HelpCircle size={10} className="text-gray-600" />
-                        </label>
-                        <div className="grid grid-cols-1 gap-3 max-h-64 overflow-y-auto pr-2 custom-scrollbar">
+                    <div className="md:col-span-2 space-y-4">
+                        <div className="flex items-center gap-2 px-1 text-emerald-400 font-bold">
+                            <Edit3 size={14} />
+                            <span className="text-[10px] uppercase tracking-widest">Interactive Column Mapper</span>
+                        </div>
+                        <div className="grid grid-cols-1 gap-3">
                             {columns.map(col => (
-                                <div key={col} className="flex items-center gap-4 bg-white/[0.03] p-3 rounded-xl border border-white/5 group hover:border-purple-500/30 transition-all">
-                                    <div className="w-1/2 font-mono text-xs text-gray-400 p-2 bg-black/20 rounded-lg truncate border border-white/5">
-                                        {col}
+                                <div key={col} className="flex items-center gap-4 bg-black/40 p-3 rounded-xl border border-white/5">
+                                    <div className="flex-1 flex items-center gap-3">
+                                        <div className="w-6 h-6 rounded bg-white/5 flex items-center justify-center text-[10px] font-black text-gray-500 uppercase tracking-tighter shrink-0 border border-white/5">
+                                            SRC
+                                        </div>
+                                        <span className="text-xs font-bold text-gray-400 truncate">{col}</span>
                                     </div>
-                                    <ArrowRightLeft size={14} className="text-gray-600 group-hover:text-purple-400 transition-colors shrink-0" />
-                                    <input
-                                        type="text"
-                                        placeholder="New name..."
-                                        value={params.mapping?.[col] || ""}
-                                        onChange={(e) => updateRenameMapping(col, e.target.value)}
-                                        className="w-1/2 bg-purple-500/5 border border-white/10 rounded-lg p-2 text-white text-xs focus:ring-1 focus:ring-purple-500/50 outline-none transition-all placeholder:text-gray-700 font-bold"
-                                    />
+                                    <ArrowRight size={14} className="text-purple-500/40" />
+                                    <div className="flex-[2] relative group">
+                                        <input
+                                            type="text"
+                                            value={params['mapper']?.[col] ?? col}
+                                            onChange={(e) => {
+                                                const currentMapper = params['mapper'] || {};
+                                                updateParam('mapper', { ...currentMapper, [col]: e.target.value });
+                                            }}
+                                            className="w-full bg-white/[0.03] border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:ring-2 focus:ring-purple-500/30 outline-none placeholder:text-gray-800 font-mono transition-all"
+                                            placeholder="Enter new name..."
+                                        />
+                                        <Type size={12} className="absolute right-3 top-1/2 -translate-y-1/2 text-white/10 group-focus-within:text-purple-500/40" />
+                                    </div>
                                 </div>
                             ))}
                         </div>
-                        {Object.keys(params.mapping || {}).length > 0 && (
-                            <div className="p-3 rounded-xl bg-emerald-500/5 border border-emerald-500/10 text-[9px] font-black text-emerald-400/80 uppercase tracking-widest">
-                                {Object.keys(params.mapping).length} Renaming Rules Active
-                            </div>
-                        )}
+                    </div>
+                )}
+
+                {operation === "drop_columns" && (
+                    <div className="md:col-span-2 space-y-4">
+                        <div className="flex items-center gap-2 px-1 text-rose-400 font-bold">
+                            <Trash2 size={14} />
+                            <span className="text-[10px] uppercase tracking-widest">Select Features to Purge</span>
+                        </div>
+                        {renderMultiSelect("Columns to Drop", "columns")}
                     </div>
                 )}
 
                 {operation === "convert_type" && (
                     <>
-                        {renderDropdown("Select Column", "column", [
-                            { value: "", label: "-- Choose Column --" },
-                            ...columns.map(c => ({ value: c, label: c }))
-                        ])}
-                        {renderDropdown("Target Type", "type", [
-                            { value: "numeric", label: "Numeric (Float64)" },
-                            { value: "datetime", label: "Date & Time" },
-                            { value: "string", label: "Plain Text" },
-                            { value: "category", label: "Categorical" }
+                        {renderMultiSelect("Target Columns", "columns")}
+                        {renderDropdown("Target Format", "dtype", [
+                            { value: "int64", label: "Integer (Discrete Numbers)" },
+                            { value: "float64", label: "Float (Decimal Numbers)" },
+                            { value: "string", label: "String (Text Labels)" },
+                            { value: "datetime64[ns]", label: "Temporal (Date/Time)" }
                         ])}
                     </>
                 )}
 
                 {(operation === "remove_outliers_zscore" || operation === "remove_outliers_iqr") && (
                     <>
-                        {operation === "remove_outliers_zscore" && renderInput("Z-Score Threshold", "threshold", "number", "Default is 3.0")}
-                        <div className="md:col-span-2">
-                            {renderMultiSelect("Columns to Analyze", "columns")}
-                        </div>
+                        {renderInput("Sensitivity (Threshold)", "threshold", "number", "e.g. 3.0 or 1.5")}
+                        {renderMultiSelect("Feature Subset", "columns")}
                     </>
                 )}
 
                 {operation === "text_clean" && (
                     <>
-                        {renderDropdown("Select Column", "column", [
-                            { value: "", label: "-- Choose Column --" },
-                            ...columns.map(c => ({ value: c, label: c }))
+                        {renderDropdown("Sanitization Strategy", "case_type", [
+                            { value: "lower", label: "Force Lowercase" },
+                            { value: "upper", label: "Force Uppercase" }
                         ])}
-                        {renderDropdown("Action", "action", [
-                            { value: "lower", label: "Lowercase" },
-                            { value: "upper", label: "Uppercase" },
-                            { value: "strip", label: "Trim Whitespace" }
-                        ])}
+                        {renderMultiSelect("Target Columns", "columns")}
                     </>
+                )}
+
+                {operation === "drop_duplicates" && (
+                    <div className="md:col-span-2">
+                        {renderMultiSelect("Identity Verification Columns (Subset)", "subset")}
+                        <p className="mt-4 text-[9px] text-gray-600 italic px-2">Leave empty to check complete row equality.</p>
+                    </div>
                 )}
             </div>
         </div>
