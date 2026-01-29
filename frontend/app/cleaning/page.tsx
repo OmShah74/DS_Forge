@@ -96,10 +96,10 @@ export default function CleaningPage() {
         <div className="flex flex-col h-[calc(100vh-80px)] space-y-6">
             <header className="flex items-center justify-between shrink-0">
                 <div>
-                    <h1 className="text-3xl font-black text-white flex items-center gap-3 italic leading-none">
-                        <Layers className="text-purple-500" /> CLEANING <span className="text-purple-500">ENGINE</span>
+                    <h1 className="text-3xl font-bold text-white flex items-center gap-3 leading-none">
+                        <Layers className="text-purple-500" /> Cleaning <span className="text-purple-600">Engine</span>
                     </h1>
-                    <p className="text-gray-400 mt-2 uppercase text-[10px] font-bold tracking-[0.2em] opacity-60">Transform and sanitize artifacts for model readiness</p>
+                    <p className="text-gray-400 mt-2 text-base font-medium opacity-60">Transform and sanitize artifacts for model readiness</p>
                 </div>
             </header>
 
@@ -109,7 +109,7 @@ export default function CleaningPage() {
                     <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl">
                         <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
                             <Database size={14} className="text-purple-500" />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Source Registry</h2>
+                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Source Registry</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto space-y-2 pr-1 custom-scrollbar">
                             {datasets.map(ds => (
@@ -126,9 +126,9 @@ export default function CleaningPage() {
                                     {selectedId === ds.id && (
                                         <div className="absolute left-0 top-0 w-1 h-full bg-purple-500"></div>
                                     )}
-                                    <p className="font-bold text-sm truncate">{ds.filename}</p>
+                                    <p className="font-bold text-base truncate">{ds.filename}</p>
                                     <div className="flex items-center gap-2 mt-2">
-                                        <span className="text-[9px] font-black opacity-60 uppercase tracking-tighter">{ds.row_count} rows</span>
+                                        <span className="text-xs font-semibold opacity-60 tracking-wide">{ds.row_count} Rows</span>
                                     </div>
                                 </div>
                             ))}
@@ -138,16 +138,16 @@ export default function CleaningPage() {
                     <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl bg-black/40">
                         <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
                             <RefreshCw size={14} className="text-purple-500" />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Pipeline History</h2>
+                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Pipeline History</h2>
                         </div>
                         <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                             {auditLog.length > 0 ? auditLog.map(log => (
                                 <div key={log.id} className="p-3 rounded-lg border border-white/5 bg-white/[0.02] space-y-1">
                                     <div className="flex items-center justify-between">
-                                        <span className="text-[10px] font-black text-purple-400 uppercase tracking-tighter">{log.operation}</span>
-                                        <span className="text-[9px] font-bold text-gray-600">{log.timestamp}</span>
+                                        <span className="text-xs font-bold text-purple-400 tracking-tight">{log.operation?.replace(/_/g, ' ')}</span>
+                                        <span className="text-xs font-medium text-gray-500">{log.timestamp}</span>
                                     </div>
-                                    <p className="text-[10px] text-gray-500 italic">Mutation complete</p>
+                                    <p className="text-xs text-gray-500">Mutation complete</p>
                                 </div>
                             )) : (
                                 <div className="h-full flex flex-col items-center justify-center opacity-20 py-8">
@@ -165,10 +165,10 @@ export default function CleaningPage() {
                     <div className="glass-panel rounded-2xl border-white/5 flex flex-col shrink-0 overflow-hidden shadow-2xl">
                         <div className="p-5 border-b border-white/5 bg-white/[0.01] shrink-0">
                             <div className="flex items-center justify-between gap-6">
-                                <div className="space-y-1.5 flex-1 max-w-sm">
-                                    <label className="text-[10px] font-black text-purple-500 uppercase tracking-[0.2em] px-1">Control Console</label>
+                                <div className="space-y-3 flex-1 max-w-sm">
+                                    <label className="text-sm font-semibold text-purple-500 tracking-wide px-1">Control Console</label>
                                     <select
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-base focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
                                         value={operation}
                                         onChange={(e) => setOperation(e.target.value)}
                                     >
@@ -195,7 +195,7 @@ export default function CleaningPage() {
                                         onClick={handleApply}
                                         disabled={loading || !selectedId}
                                         className={cn(
-                                            "px-8 h-12 rounded-xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-3 transition-all active:scale-95 shadow-lg",
+                                            "px-8 h-12 rounded-xl font-bold text-sm tracking-wide flex items-center gap-3 transition-all active:scale-95 shadow-lg",
                                             loading || !selectedId
                                                 ? "bg-white/5 text-gray-700 cursor-not-allowed border border-white/5"
                                                 : "bg-purple-600 hover:bg-purple-500 text-white shadow-purple-500/20"
@@ -222,10 +222,10 @@ export default function CleaningPage() {
                         <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                             <div className="flex items-center gap-2">
                                 <Layers size={14} className="text-purple-500" />
-                                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Stream Analysis</h2>
+                                <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Stream Analysis</h2>
                             </div>
                             {preview && (
-                                <span className="text-[9px] font-black text-gray-500 uppercase bg-white/5 px-2 py-1 rounded border border-white/5">
+                                <span className="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded border border-white/5">
                                     {preview.columns.length} Features • {preview.total_rows} Records
                                 </span>
                             )}

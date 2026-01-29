@@ -166,9 +166,9 @@ export default function EvaluationPage() {
                     <div className="flex items-center justify-between mb-4">
                         <div className="flex items-center gap-3">
                             <BarChartIcon className="text-purple-500" size={16} />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] leading-none">Model Registry</h2>
+                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide">Model Registry</h2>
                         </div>
-                        <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">Verified Logic Only</span>
+                        <span className="text-xs font-semibold text-gray-600 tracking-wide">Verified Logic</span>
                     </div>
                 </div>
 
@@ -192,12 +192,12 @@ export default function EvaluationPage() {
                             >
                                 <div className="flex justify-between items-start mb-4">
                                     <div className="space-y-1">
-                                        <h3 className={`font-black text-xs uppercase tracking-tight truncate max-w-[180px] ${selectedRun?.id === run.id ? 'text-purple-400' : 'text-gray-400'}`}>
-                                            {run.model_name}
+                                        <h3 className={`font-bold text-sm truncate max-w-[180px] ${selectedRun?.id === run.id ? 'text-purple-400' : 'text-gray-300'}`}>
+                                            {run.model_name?.replace(/_/g, ' ')}
                                         </h3>
-                                        <p className="text-[9px] font-bold text-gray-600 uppercase tracking-widest">{new Date(run.created_at).toLocaleDateString()}</p>
+                                        <p className="text-xs font-medium text-gray-500">{new Date(run.created_at + 'Z').toLocaleDateString()}</p>
                                     </div>
-                                    <span className="text-[9px] font-mono font-black opacity-30 bg-black/60 px-2 py-0.5 rounded border border-white/5">#{run.id}</span>
+                                    <span className="text-xs font-mono font-bold opacity-30 bg-black/60 px-2 py-0.5 rounded border border-white/5">#{run.id}</span>
                                 </div>
                                 <div className="grid grid-cols-2 gap-3">
                                     {run.metrics && Object.entries(run.metrics).slice(0, 2).map(([k, v]) => (
@@ -230,29 +230,29 @@ export default function EvaluationPage() {
                                         <TrendingUp className="text-emerald-500" size={24} />
                                     </div>
                                     <div>
-                                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] mb-1">Telemetry Analysis</h2>
-                                        <h1 className="text-3xl font-black text-white italic font-mono uppercase tracking-tight">LOGIC <span className="text-purple-600">ARTIFACT</span> REPORT</h1>
+                                        <h2 className="text-sm font-semibold text-purple-500 tracking-wide mb-1">Telemetry Analysis</h2>
+                                        <h1 className="text-3xl font-bold text-white tracking-tight">Logic <span className="text-purple-600">Artifact</span> Report</h1>
                                     </div>
                                 </div>
-                                <p className="text-gray-500 text-[10px] font-black uppercase tracking-[0.2em] px-1">Validated performance metrics for instance #{selectedRun.id}</p>
+                                <p className="text-gray-400 text-sm font-medium px-1">Validated performance metrics for instance #{selectedRun.id}</p>
                             </div>
 
                             <div className="flex gap-4">
-                                <div className="bg-black/60 border border-white/5 rounded-2xl px-8 py-4 shadow-2xl relative overflow-hidden group">
+                                <div className="bg-black/60 border border-white/5 rounded-2xl px-6 py-4 shadow-2xl relative overflow-hidden group">
                                     <div className="relative z-10">
-                                        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
-                                            <Target size={10} className="text-purple-500" /> Target
+                                        <p className="text-xs font-semibold text-gray-500 tracking-wide mb-1 flex items-center gap-2">
+                                            <Target size={12} className="text-purple-500" /> Target
                                         </p>
-                                        <p className="text-sm font-black text-white uppercase">{selectedRun.target_column || "UNSPECIFIED"}</p>
+                                        <p className="text-base font-bold text-white">{selectedRun.target_column || "Unspecified"}</p>
                                     </div>
                                     <ArrowUpRight size={40} className="absolute -bottom-2 -right-2 text-purple-500/5 group-hover:text-purple-500/10 transition-colors" />
                                 </div>
-                                <div className="bg-black/60 border border-white/5 rounded-2xl px-8 py-4 shadow-2xl relative overflow-hidden group">
+                                <div className="bg-black/60 border border-white/5 rounded-2xl px-6 py-4 shadow-2xl relative overflow-hidden group">
                                     <div className="relative z-10">
-                                        <p className="text-[8px] font-black text-gray-500 uppercase tracking-[0.2em] mb-1 flex items-center gap-2">
-                                            <Activity size={10} className="text-purple-500" /> Model Type
+                                        <p className="text-xs font-semibold text-gray-500 tracking-wide mb-1 flex items-center gap-2">
+                                            <Activity size={12} className="text-purple-500" /> Model Type
                                         </p>
-                                        <p className="text-sm font-black text-white uppercase">{selectedRun.model_name?.replace('_', ' ')}</p>
+                                        <p className="text-base font-bold text-white">{selectedRun.model_name?.replace(/_/g, ' ')}</p>
                                     </div>
                                     <Zap size={40} className="absolute -bottom-2 -right-2 text-purple-500/5 group-hover:text-purple-500/10 transition-colors" />
                                 </div>
@@ -263,8 +263,8 @@ export default function EvaluationPage() {
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {selectedRun.metrics && Object.entries(selectedRun.metrics).map(([k, v]) => (
                                 <div key={k} className="glass-panel p-6 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all">
-                                    <h3 className="text-[9px] font-black text-gray-500 uppercase tracking-[0.3em] mb-3 group-hover:text-purple-500 transition-colors">{k.replace('_', ' ')}</h3>
-                                    <p className="text-3xl font-mono font-black text-white">{typeof v === 'number' ? v.toFixed(5) : v}</p>
+                                    <h3 className="text-xs font-semibold text-gray-500 tracking-wide mb-3 group-hover:text-purple-400 transition-colors">{k.replace(/_/g, ' ')}</h3>
+                                    <p className="text-3xl font-mono font-bold text-white">{typeof v === 'number' ? v.toFixed(5) : v}</p>
                                     <div className="absolute top-0 right-0 w-20 h-20 bg-purple-600/5 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                 </div>
                             ))}
@@ -278,7 +278,7 @@ export default function EvaluationPage() {
                                 <div className="glass-panel p-8 rounded-3xl border-white/5 bg-black/30 space-y-6">
                                     <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                                         <div className="p-2 rounded-lg bg-purple-600/10"><BarChartIcon size={14} className="text-purple-500" /></div>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Feature Influence Matrix</h3>
+                                        <h3 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Feature Influence Matrix</h3>
                                     </div>
                                     <FeatureImportanceChart data={selectedRun.detailed_report.feature_importance} />
                                 </div>

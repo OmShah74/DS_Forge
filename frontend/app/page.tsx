@@ -66,11 +66,11 @@ export default function Home() {
       {/* Header Section */}
       <header className="flex flex-col md:flex-row md:items-end justify-between gap-6 px-1">
         <div className="space-y-4">
-          <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">Command Center Dashboard</h2>
-          <h1 className="text-4xl md:text-6xl font-black tracking-[0.02em] text-white italic leading-none">
-            DS-FORGE <span className="text-purple-600">SYSTEM</span>
+          <h2 className="text-sm font-semibold text-purple-500 tracking-wider leading-none uppercase">Command Center Dashboard</h2>
+          <h1 className="text-4xl md:text-6xl font-bold tracking-tight text-white leading-none">
+            DS-FORGE <span className="text-purple-600">System</span>
           </h1>
-          <p className="text-gray-500 max-w-lg text-xs font-medium leading-relaxed">
+          <p className="text-gray-400 max-w-lg text-base font-medium leading-relaxed">
             Your end-to-end environment for professional data science workflows.
             Everything from ingestion to production deployment in one unified OS.
           </p>
@@ -78,30 +78,30 @@ export default function Home() {
 
         <div className="glass-panel px-6 py-4 rounded-2xl flex items-center gap-6 border-white/5 bg-black/40">
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">System Health</span>
+            <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">System Health</span>
             <div className="flex items-center gap-2 mt-2">
               {status === "online" ? (
                 <>
-                  <div className="w-2 h-2 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse"></div>
-                  <span className="text-emerald-400 font-black text-[10px] tracking-widest uppercase">CORE ONLINE</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-emerald-500 shadow-[0_0_10px_rgba(16,185,129,0.4)] animate-pulse"></div>
+                  <span className="text-emerald-400 font-bold text-xs tracking-wide">Core Online</span>
                 </>
               ) : status === "error" ? (
                 <>
-                  <div className="w-2 h-2 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]"></div>
-                  <span className="text-rose-400 font-black text-[10px] tracking-widest uppercase">CONNECTION ERROR</span>
+                  <div className="w-2.5 h-2.5 rounded-full bg-rose-500 shadow-[0_0_10px_rgba(244,63,94,0.4)]"></div>
+                  <span className="text-rose-400 font-bold text-xs tracking-wide uppercase text-rose-500">System Fault</span>
                 </>
               ) : (
                 <>
                   <Loader2 size={12} className="text-purple-500 animate-spin" />
-                  <span className="text-purple-400 font-black text-[10px] tracking-widest uppercase">SCANNING...</span>
+                  <span className="text-purple-400 font-bold text-xs tracking-wide">Scanning...</span>
                 </>
               )}
             </div>
           </div>
           <div className="w-px h-8 bg-white/5"></div>
           <div className="flex flex-col">
-            <span className="text-[9px] font-black text-gray-500 uppercase tracking-[0.2em]">Latency</span>
-            <span className="text-white font-black text-[10px] mt-2 uppercase tracking-widest">12ms • CLOUD</span>
+            <span className="text-xs font-semibold text-gray-500 tracking-wide uppercase">Latency</span>
+            <span className="text-white font-bold text-xs mt-2 tracking-wide uppercase">12ms • Cloud</span>
           </div>
         </div>
       </header>
@@ -109,7 +109,7 @@ export default function Home() {
       {/* Pipeline Visualization */}
       <section className="space-y-8">
         <div className="flex items-center gap-4 px-1">
-          <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] leading-none">Pipeline Architecture</h3>
+          <h3 className="text-sm font-semibold text-gray-500 uppercase tracking-wider leading-none">Pipeline Architecture</h3>
           <div className="h-px flex-1 bg-gradient-to-r from-white/5 to-transparent"></div>
         </div>
 
@@ -127,10 +127,10 @@ export default function Home() {
                 </div>
 
                 <div className="mt-8 flex items-center justify-between">
-                  <h4 className="text-lg font-black text-white/90 group-hover:text-purple-400 transition-colors duration-300 uppercase tracking-tight">{phase.title}</h4>
+                  <h4 className="text-xl font-bold text-white group-hover:text-purple-400 transition-colors duration-300 tracking-tight">{phase.title}</h4>
                   <ArrowRight size={20} className="text-gray-800 group-hover:text-purple-500 transition-all transform translate-x-[-10px] opacity-0 group-hover:translate-x-0 group-hover:opacity-100 duration-500" />
                 </div>
-                <p className="text-[11px] font-medium text-gray-500 mt-3 leading-relaxed tracking-tight group-hover:text-gray-400 transition-colors">
+                <p className="text-sm font-medium text-gray-400 mt-3 leading-relaxed tracking-tight group-hover:text-gray-300 transition-colors">
                   {phase.desc}
                 </p>
               </div>
@@ -144,14 +144,14 @@ export default function Home() {
         <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/[0.03] blur-[120px] rounded-full -translate-y-1/2 translate-x-1/2"></div>
         <div className="relative z-10 flex flex-col md:flex-row items-center justify-between gap-12">
           <div className="space-y-4">
-            <h3 className="text-3xl font-black text-white leading-tight">Ready to initiate your <br /><span className="text-purple-500">first data mutation?</span></h3>
-            <p className="text-gray-500 max-w-md text-xs font-medium leading-relaxed">
+            <h3 className="text-3xl font-bold text-white leading-tight">Ready to initiate your <br /><span className="text-purple-500">first data mutation?</span></h3>
+            <p className="text-gray-400 max-w-md text-base font-medium leading-relaxed">
               Start by ingesting your raw data artifacts into the system registry.
               Securely supports CSV, JSON, and XLSX protocols.
             </p>
           </div>
           <Link href="/datasets">
-            <button className="bg-purple-600 hover:bg-purple-500 text-white px-10 py-5 rounded-2xl font-black text-xs uppercase tracking-[0.2em] flex items-center gap-4 transition-all shadow-2xl shadow-purple-950/40 hover:shadow-purple-500/20 transform hover:-translate-y-1 active:scale-95 duration-300">
+            <button className="bg-purple-600 hover:bg-purple-500 text-white px-8 py-4 rounded-2xl font-bold text-xs uppercase tracking-wider flex items-center gap-4 transition-all shadow-2xl shadow-purple-950/40 hover:shadow-purple-500/20 transform hover:-translate-y-1 active:scale-95 duration-300">
               Initiate Ingestion <ArrowRight size={18} />
             </button>
           </Link>

@@ -126,11 +126,11 @@ export default function TrainingPage() {
                         <BrainCircuit size={24} className="text-purple-500" />
                     </div>
                     <div>
-                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">Compute Studio</h2>
-                        <h1 className="text-3xl font-black text-white italic mt-1 font-mono uppercase tracking-tight">Model <span className="text-purple-600">Training</span></h1>
+                        <h2 className="text-sm font-semibold text-purple-500 tracking-wider leading-none">Compute Studio</h2>
+                        <h1 className="text-3xl font-bold text-white mt-1 font-mono tracking-tight">Model <span className="text-purple-600">Training</span></h1>
                     </div>
                 </div>
-                <p className="text-gray-500 text-xs font-medium max-w-lg mt-2">
+                <p className="text-gray-400 text-base font-medium max-w-lg mt-2">
                     Execute high-performance machine learning pipelines. Configure target vectors and optimized model architectures.
                 </p>
             </header>
@@ -140,21 +140,21 @@ export default function TrainingPage() {
                 {/* LEFT: Configuration Panel */}
                 <div className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/40 h-fit space-y-8 shadow-2xl relative overflow-hidden">
                     <div className="px-1 border-b border-white/5 pb-4">
-                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Pipeline Config</h3>
+                        <h3 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Pipeline Configuration</h3>
                     </div>
 
                     <div className="space-y-6">
                         {/* Dataset Select */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                                <Box size={10} className="text-purple-500" /> Artifact Source
+                            <label className="text-sm font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
+                                <Box size={14} className="text-purple-500" /> Artifact Source
                             </label>
                             <select
-                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-medium"
                                 onChange={(e) => setSelectedDsId(Number(e.target.value))}
                                 value={selectedDsId || ""}
                             >
-                                <option value="" className="bg-[#04060c]">Select Dataset...</option>
+                                <option value="" className="bg-[#04060c]">Select dataset...</option>
                                 {datasets.map(ds => (
                                     <option key={ds.id} value={ds.id} className="bg-[#04060c]">{ds.filename}</option>
                                 ))}
@@ -163,16 +163,16 @@ export default function TrainingPage() {
 
                         {/* Target Select */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                                <Target size={10} className="text-purple-500" /> Target Vector (Y)
+                            <label className="text-sm font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
+                                <Target size={14} className="text-purple-500" /> Target Vector (Y)
                             </label>
                             <select
-                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold disabled:opacity-30"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-medium disabled:opacity-30"
                                 onChange={(e) => handleTargetChange(e.target.value)}
                                 value={selectedTarget}
                                 disabled={!selectedDsId}
                             >
-                                <option value="" className="bg-[#04060c]">Select Target Column...</option>
+                                <option value="" className="bg-[#04060c]">Select target column...</option>
                                 {columns.map(col => (
                                     <option key={col} value={col} className="bg-[#04060c]">{col}</option>
                                 ))}
@@ -182,18 +182,18 @@ export default function TrainingPage() {
                         {/* Feature Selection (The NEW Matrix) */}
                         <div className="space-y-3">
                             <div className="flex justify-between items-center px-1">
-                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest flex items-center gap-2">
-                                    <ListFilter size={10} className="text-purple-500" /> Feature Matrix (X)
+                                <label className="text-sm font-semibold text-gray-500 tracking-wide flex items-center gap-2">
+                                    <ListFilter size={14} className="text-purple-500" /> Feature Matrix (X)
                                 </label>
-                                <span className="text-[9px] font-bold text-gray-400">{selectedFeatures.length}/{columns.length - 1} Selected</span>
+                                <span className="text-xs font-medium text-gray-400">{selectedFeatures.length}/{columns.length - 1} Selected</span>
                             </div>
 
                             <button
                                 onClick={() => setShowFeatureMatrix(!showFeatureMatrix)}
                                 disabled={!selectedTarget}
-                                className="w-full bg-white/[0.03] border border-white/5 rounded-xl p-4 flex items-center justify-between text-xs text-gray-400 hover:bg-white/[0.05] transition-all disabled:opacity-30"
+                                className="w-full bg-white/[0.03] border border-white/5 rounded-xl p-3 flex items-center justify-between text-sm text-gray-400 hover:bg-white/[0.05] transition-all disabled:opacity-30"
                             >
-                                <span className="font-bold uppercase tracking-widest text-[10px]">Configure Selection</span>
+                                <span className="font-semibold text-sm">Configure selection</span>
                                 <ChevronDown size={14} className={`transition-transform duration-300 ${showFeatureMatrix ? 'rotate-180' : ''}`} />
                             </button>
 
@@ -223,15 +223,15 @@ export default function TrainingPage() {
 
                         {/* Model Select */}
                         <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
-                                <Activity size={10} className="text-purple-500" /> Protocol / Algorithm
+                            <label className="text-sm font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
+                                <Activity size={14} className="text-purple-500" /> Protocol / Algorithm
                             </label>
                             <select
-                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-medium"
                                 onChange={(e) => setSelectedModelKey(e.target.value)}
                                 value={selectedModelKey}
                             >
-                                <option value="" className="bg-[#04060c]">Select Logic...</option>
+                                <option value="" className="bg-[#04060c]">Select logic...</option>
                                 {models.map(m => (
                                     <option key={m.key} value={m.key} className="bg-[#04060c]">
                                         [{m.type.toUpperCase()}] {m.name}
@@ -244,7 +244,7 @@ export default function TrainingPage() {
                     <button
                         onClick={handleStartTraining}
                         disabled={isSubmitting || !selectedDsId || !selectedTarget || !selectedModelKey || selectedFeatures.length === 0}
-                        className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-white/5 disabled:text-gray-700 text-white p-5 rounded-xl font-black text-[10px] uppercase tracking-[0.2em] flex justify-center items-center gap-3 transition-all shadow-2xl shadow-purple-950/40 active:scale-95"
+                        className="w-full bg-purple-600 hover:bg-purple-500 disabled:bg-white/5 disabled:text-gray-700 text-white p-4 rounded-xl font-bold text-sm tracking-wide flex justify-center items-center gap-3 transition-all shadow-2xl shadow-purple-950/40 active:scale-95"
                     >
                         {isSubmitting ? "Syncing..." : <><Play size={14} /> Initiate Training Protocol</>}
                     </button>
@@ -258,9 +258,9 @@ export default function TrainingPage() {
                     <div className="flex items-center justify-between mb-8 px-1 border-b border-white/5 pb-4">
                         <div className="flex items-center gap-3">
                             <Activity className="text-purple-500" size={16} />
-                            <h3 className="text-[10px] font-black text-gray-400 font-mono uppercase tracking-[0.3em]">Telemetry Stream</h3>
+                            <h3 className="text-sm font-bold text-gray-400 font-mono tracking-wide uppercase">Telemetry Stream</h3>
                         </div>
-                        <span className="text-[9px] font-black text-gray-600 uppercase tracking-widest">{runs.length} Runs Logged</span>
+                        <span className="text-xs font-semibold text-gray-500 tracking-wider">{runs.length} Runs Logged</span>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-6 pr-1 custom-scrollbar">
@@ -280,8 +280,8 @@ export default function TrainingPage() {
                                             </div>
                                             <div className="flex items-center gap-2">
                                                 <div className={`w-1.5 h-1.5 rounded-full ${run.status === 'completed' ? 'bg-emerald-500 shadow-[0_0_8px_rgba(16,185,129,0.5)]' : run.status === 'failed' ? 'bg-rose-500 shadow-[0_0_8px_rgba(244,63,94,0.5)]' : 'bg-blue-500 animate-pulse shadow-[0_0_8px_rgba(59,130,246,0.5)]'}`}></div>
-                                                <p className="text-[9px] font-black text-gray-500 uppercase tracking-[0.1em]">
-                                                    {new Date(run.created_at).toLocaleTimeString()} • {run.status}
+                                                <p className="text-xs font-medium text-gray-400">
+                                                    {new Date(run.created_at + 'Z').toLocaleString(undefined, { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true })} • {run.status}
                                                 </p>
                                             </div>
                                         </div>
@@ -308,8 +308,8 @@ export default function TrainingPage() {
 
                                     {/* Progress Section */}
                                     <div className="space-y-3">
-                                        <div className="flex justify-between items-center text-[10px] font-black uppercase tracking-widest">
-                                            <span className="text-gray-500 flex items-center gap-2 uppercase">
+                                        <div className="flex justify-between items-center text-sm font-semibold tracking-tight">
+                                            <span className="text-gray-400 flex items-center gap-2">
                                                 {run.status === 'completed' ? 'Processing Finalized' : run.status === 'failed' ? 'Engine Fault' : `Current Stage: ${run.stage || 'Initializing'}`}
                                             </span>
                                             <span className={run.status === 'completed' ? 'text-emerald-500' : run.status === 'failed' ? 'text-rose-500' : 'text-blue-500'}>

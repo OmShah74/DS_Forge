@@ -84,7 +84,7 @@ export default function FeatureEngineeringPage() {
                     <div className="flex items-center justify-between px-1 mb-6 shrink-0">
                         <div className="flex items-center gap-2">
                             <FlaskConical size={14} className="text-purple-500" />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-widest leading-none">Source Registry</h2>
+                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Source Registry</h2>
                         </div>
                     </div>
                     <div className="flex-1 overflow-y-auto space-y-3 pr-2 custom-scrollbar">
@@ -102,10 +102,10 @@ export default function FeatureEngineeringPage() {
                                 {selectedId === ds.id && (
                                     <div className="absolute left-0 top-0 w-1 h-full bg-purple-500 shadow-[0_0_10px_rgba(168,85,247,0.5)]"></div>
                                 )}
-                                <p className={`font-black text-sm uppercase tracking-tight truncate ${selectedId === ds.id ? 'text-purple-400' : ''}`}>{ds.filename}</p>
+                                <p className={`font-bold text-base truncate ${selectedId === ds.id ? 'text-purple-400' : 'text-gray-300'}`}>{ds.filename}</p>
                                 <div className="flex items-center gap-2 mt-2">
-                                    <span className="text-[8px] font-black opacity-40 uppercase tracking-widest bg-black/40 px-1.5 py-0.5 rounded border border-white/5">{ds.row_count} Vectors</span>
-                                    <span className="text-[8px] font-black opacity-40 uppercase tracking-widest bg-black/40 px-1.5 py-0.5 rounded border border-white/5">{ds.column_count} Feat</span>
+                                    <span className="text-xs font-semibold opacity-50 tracking-wide bg-black/40 px-2 py-0.5 rounded border border-white/5">{ds.row_count} Vectors</span>
+                                    <span className="text-xs font-semibold opacity-50 tracking-wide bg-black/40 px-2 py-0.5 rounded border border-white/5">{ds.column_count} Features</span>
                                 </div>
                             </div>
                         ))}
@@ -118,15 +118,15 @@ export default function FeatureEngineeringPage() {
                         <div className="p-2 rounded-lg bg-purple-600/10 border border-purple-500/20">
                             <Wand2 size={16} className="text-purple-500" />
                         </div>
-                        <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em] leading-none">Mutation Wizard</h2>
+                        <h2 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Mutation Wizard</h2>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar pb-6">
 
                         {/* Technique Select */}
                         <div className="space-y-4">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                <Settings size={10} className="text-purple-500" /> Transformation Protocol
+                            <label className="text-base font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
+                                <Settings size={12} className="text-purple-500" /> Transformation Protocol
                             </label>
                             <select
                                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
@@ -204,13 +204,13 @@ export default function FeatureEngineeringPage() {
                             onClick={handleApply}
                             disabled={loading || !selectedId || selectedCols.length === 0}
                             className={`
-                                w-full p-5 rounded-2xl font-black text-[10px] uppercase tracking-[0.2em] flex justify-center items-center gap-3 transition-all shadow-2xl active:scale-95
+                                w-full p-4 rounded-xl font-bold text-sm tracking-wide flex justify-center items-center gap-3 transition-all shadow-2xl active:scale-95
                                 ${loading || !selectedId || selectedCols.length === 0
                                     ? 'bg-white/5 text-gray-700'
                                     : 'bg-purple-600 hover:bg-purple-500 text-white shadow-purple-900/40'}
                             `}
                         >
-                            {loading ? "Initializing..." : <><Sparkles size={14} /> Commit Mutation</>}
+                            {loading ? "Syncing Logic..." : <><Sparkles size={16} /> Commit Mutation</>}
                         </button>
                     </div>
 
