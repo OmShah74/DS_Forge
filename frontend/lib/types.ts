@@ -18,7 +18,10 @@ export interface TrainingRun {
     id: number;
     model_name: string;
     target_column?: string;
+    feature_columns?: string[];
     status: "pending" | "running" | "completed" | "failed";
+    progress?: number;
+    stage?: string;
     metrics: Record<string, number> | null;
     detailed_report?: any;
     error_message: string | null;

@@ -35,10 +35,13 @@ class TrainingRun(Base):
     # Config
     model_name = Column(String)
     target_column = Column(String)
+    feature_columns = Column(JSON, nullable=True) # Explicitly selected features
     parameters = Column(JSON)
     
     # State
     status = Column(String, default="pending") 
+    progress = Column(Integer, default=0)         # 0-100
+    stage = Column(String, nullable=True)         # "loading", "preprocessing", "fitting", "scoring"
     error_message = Column(String, nullable=True)
     
     # Results

@@ -5,7 +5,10 @@ import os
 import uuid
 from sqlalchemy.orm import Session
 from sklearn.model_selection import train_test_split
-from sklearn.metrics import accuracy_score, f1_score, mean_squared_error, r2_score, confusion_matrix
+from sklearn.metrics import (
+    accuracy_score, f1_score, mean_squared_error, 
+    r2_score, confusion_matrix, roc_curve, auc
+)
 from sklearn.preprocessing import LabelEncoder
 
 from app.db.models import TrainingRun, Dataset
@@ -23,8 +26,10 @@ class TrainingEngine:
             return
 
         try:
-            # 1. Update Status
+            # 1. Update Status: Loading
             run.status = "running"
+            run.stage = "loading"
+            run.progress = 10
             db.commit()
 
             # 2. Load Dataset
@@ -36,17 +41,30 @@ class TrainingEngine:
             if target not in df.columns:
                 raise ValueError(f"Target column '{target}' not found")
 
-            X = df.drop(columns=[target])
+            # Selection Logic
+            if run.feature_columns:
+                # Validate selected features exist
+                existing_features = [c for c in run.feature_columns if c in df.columns]
+                X = df[existing_features]
+            else:
+                # Fallback to all except target
+                X = df.drop(columns=[target])
+            
             y = df[target]
 
-            # 4. Preprocessing (Simple Label Encoding for V1)
-            # Save encoders in V2 for inference safety
+            # 4. Preprocessing
+            run.stage = "preprocessing"
+            run.progress = 30
+            db.commit()
+
+            # Simple Label Encoding for categorical features
             for col in X.select_dtypes(include=['object', 'category']).columns:
                 le = LabelEncoder()
                 X[col] = le.fit_transform(X[col].astype(str))
             
             y_is_categorical = False
-            if y.dtype == 'object' or ModelRegistry.get_model(run.model_name)["type"] == "classification":
+            model_info = ModelRegistry.get_model(run.model_name)
+            if y.dtype == 'object' or model_info["type"] == "classification":
                 y_is_categorical = True
                 le_target = LabelEncoder()
                 y = le_target.fit_transform(y)
@@ -54,51 +72,72 @@ class TrainingEngine:
             else:
                 target_classes = []
 
-            # 5. Split Data
+            # Split Data
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
-            # 6. Initialize Model
-            model_info = ModelRegistry.get_model(run.model_name)
+            # 5. Training
+            run.stage = "fitting"
+            run.progress = 50
+            db.commit()
+
             params = run.parameters or {}
             clf = model_info["class"](**params)
-
-            # 7. Train
             clf.fit(X_train, y_train)
 
-            # 8. Evaluate & Generate Detailed Report
+            # 6. Evaluation
+            run.stage = "scoring"
+            run.progress = 80
+            db.commit()
+
             preds = clf.predict(X_test)
             metrics = {}
             report = {}
 
             if model_info["type"] == "classification":
-                # Metrics
                 metrics["accuracy"] = float(accuracy_score(y_test, preds))
                 metrics["f1_weighted"] = float(f1_score(y_test, preds, average='weighted'))
                 
                 # Detailed Report: Confusion Matrix
                 cm = confusion_matrix(y_test, preds)
                 report["type"] = "classification"
-                report["confusion_matrix"] = cm.tolist() # Convert to list for JSON
+                report["confusion_matrix"] = cm.tolist()
                 report["classes"] = target_classes
                 
-                # Feature Importance (if supported)
+                # ROC Curve for binary/multi
+                if hasattr(clf, "predict_proba"):
+                    probs = clf.predict_proba(X_test)
+                    if len(target_classes) == 2:
+                        fpr, tpr, _ = roc_curve(y_test, probs[:, 1])
+                        report["roc"] = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": auc(fpr, tpr)}
+
+                # Feature Importance
+                importances = None
                 if hasattr(clf, "feature_importances_"):
-                    report["feature_importance"] = dict(zip(X.columns, clf.feature_importances_.tolist()))
+                    importances = clf.feature_importances_
+                elif hasattr(clf, "coef_"):
+                    importances = np.abs(clf.coef_[0])
+                
+                if importances is not None:
+                    report["feature_importance"] = dict(zip(X.columns, importances.tolist()))
 
             else:
-                # Metrics
                 metrics["rmse"] = float(np.sqrt(mean_squared_error(y_test, preds)))
                 metrics["r2"] = float(r2_score(y_test, preds))
                 
-                # Detailed Report: Residuals for Plotting
-                # We limit points to 100 to keep JSON light
                 limit = 100
                 report["type"] = "regression"
                 report["actual"] = y_test[:limit].tolist()
                 report["predicted"] = preds[:limit].tolist()
                 
+                # Feature Importance
+                importances = None
                 if hasattr(clf, "feature_importances_"):
-                    report["feature_importance"] = dict(zip(X.columns, clf.feature_importances_.tolist()))
+                    importances = clf.feature_importances_
+                elif hasattr(clf, "coef_"):
+                    importances = np.abs(clf.coef_)
+                
+                if importances is not None:
+                    report["feature_importance"] = dict(zip(X.columns, importances.tolist()))
 
             # 9. Save Artifact
             model_filename = f"{uuid.uuid4()}.joblib"
@@ -107,6 +146,8 @@ class TrainingEngine:
 
             # 10. Complete Run
             run.status = "completed"
+            run.stage = "finalized"
+            run.progress = 100
             run.metrics = metrics
             run.detailed_report = report
             run.artifact_path = save_path
@@ -115,6 +156,7 @@ class TrainingEngine:
         except Exception as e:
             db.rollback()
             run.status = "failed"
+            run.stage = "error"
             run.error_message = str(e)
             db.commit()
             print(f"Training Failed: {e}")
