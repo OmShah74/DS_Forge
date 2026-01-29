@@ -112,7 +112,8 @@ export default function TrainingPage() {
     };
 
     const downloadModel = (id: number) => {
-        window.open(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000'}/api/v1/training/runs/${id}/download`, '_blank');
+        const baseUrl = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+        window.open(`${baseUrl}/training/runs/${id}/download`, '_blank');
         addToast("Downloading Model Artifact", "info");
     };
 
@@ -203,16 +204,16 @@ export default function TrainingPage() {
                                             key={col}
                                             onClick={() => toggleFeature(col)}
                                             className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${selectedFeatures.includes(col)
-                                                    ? 'bg-purple-600/10 border-purple-500/40'
-                                                    : 'bg-white/5 border-white/5'
+                                                ? 'bg-purple-600/10 border-purple-500/40'
+                                                : 'bg-white/5 border-white/5'
                                                 }`}
                                         >
                                             <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedFeatures.includes(col) ? 'text-purple-400' : 'text-gray-500'}`}>
                                                 {col}
                                             </span>
                                             <div className={`w-3 h-3 rounded-full border-2 ${selectedFeatures.includes(col)
-                                                    ? 'bg-purple-500 border-purple-400'
-                                                    : 'border-white/10'
+                                                ? 'bg-purple-500 border-purple-400'
+                                                : 'border-white/10'
                                                 }`}></div>
                                         </div>
                                     ))}
@@ -318,8 +319,8 @@ export default function TrainingPage() {
                                         <div className="h-1.5 w-full bg-white/5 rounded-full overflow-hidden">
                                             <div
                                                 className={`h-full transition-all duration-1000 ease-out ${run.status === 'completed' ? 'bg-emerald-500' :
-                                                        run.status === 'failed' ? 'bg-rose-500' :
-                                                            'bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.5)]'
+                                                    run.status === 'failed' ? 'bg-rose-500' :
+                                                        'bg-purple-600 shadow-[0_0_10px_rgba(147,51,234,0.5)]'
                                                     }`}
                                                 style={{ width: `${run.progress || 0}%` }}
                                             ></div>
