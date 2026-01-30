@@ -27,24 +27,24 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
 
     const renderInput = (label: string, key: string, type: string = "text", placeholder: string = "") => (
         <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">{label}</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">{label}</label>
             <input
                 type={type}
                 value={params[key] ?? ""}
                 onChange={(e) => updateParam(key, type === "number" ? (e.target.value === "" ? null : parseFloat(e.target.value)) : e.target.value)}
                 placeholder={placeholder}
-                className="w-full bg-black/40 border border-white/5 rounded-xl p-3.5 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-800 font-mono"
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-800 font-mono"
             />
         </div>
     );
 
     const renderDropdown = (label: string, key: string, options: { value: string, label: string }[]) => (
         <div className="space-y-2">
-            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">{label}</label>
+            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">{label}</label>
             <select
                 value={params[key] ?? ""}
                 onChange={(e) => updateParam(key, e.target.value)}
-                className="w-full bg-black/40 border border-white/5 rounded-xl p-3.5 text-white text-xs focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer"
+                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer"
             >
                 <option value="" className="bg-[#04060c]">Select...</option>
                 {options.map(opt => (

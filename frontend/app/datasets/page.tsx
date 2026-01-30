@@ -93,14 +93,14 @@ export default function DatasetsPage() {
     }, []);
 
     return (
-        <div className="max-w-6xl mx-auto space-y-10 relative">
+        <div className="max-w-[1600px] mx-auto h-[calc(100vh-80px)] overflow-y-auto space-y-10 animate-in fade-in duration-700 pr-2 custom-scrollbar">
             {/* Page Header */}
-            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6">
+            <div className="flex flex-col md:flex-row justify-between items-start md:items-center gap-6 pt-2">
                 <div>
-                    <h1 className="text-3xl font-black text-white flex items-center gap-3 italic">
-                        <Database className="text-blue-500" /> DATASET <span className="text-blue-500">MANAGER</span>
+                    <h1 className="text-4xl font-black text-white flex items-center gap-3 italic uppercase">
+                        <Database className="text-purple-500" /> Dataset <span className="text-purple-500">Registry</span>
                     </h1>
-                    <p className="text-gray-400 mt-1">Upload, manage and inspect your data sources.</p>
+                    <p className="text-gray-500 mt-2 text-xs font-bold uppercase tracking-widest opacity-60">Manage and inspect your raw data artifacts.</p>
                 </div>
             </div>
 

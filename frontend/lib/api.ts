@@ -3,7 +3,7 @@ import axios from 'axios';
 // When running in Docker (browser side), localhost:8000 works.
 // When running server-side (Next.js server), we might need the container name, 
 // but for this client-side dashboard, localhost is fine.
-const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
+export const API_URL = process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1';
 
 export const api = axios.create({
   baseURL: API_URL,

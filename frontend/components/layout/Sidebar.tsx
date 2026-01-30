@@ -8,6 +8,8 @@ import {
 import { clsx, type ClassValue } from "clsx";
 import { twMerge } from "tailwind-merge";
 import { useUIStore } from "@/store/uiStore";
+import { useExplainabilityStore } from "@/store/explainabilityStore";
+import { Terminal } from "lucide-react";
 
 function cn(...inputs: ClassValue[]) {
   return twMerge(clsx(inputs));
@@ -25,6 +27,7 @@ const menuItems = [
 export default function Sidebar() {
   const pathname = usePathname();
   const { sidebarCollapsed, toggleSidebar } = useUIStore();
+  const { toggleActivityLog } = useExplainabilityStore();
 
   return (
     <aside className={cn(
@@ -39,21 +42,30 @@ export default function Sidebar() {
         {sidebarCollapsed ? <ChevronRight size={14} /> : <ChevronLeft size={14} />}
       </button>
 
-      <div className={cn("p-8", sidebarCollapsed && "px-4 py-8 flex flex-col items-center")}>
+      <div className={cn("p-8 pb-4", sidebarCollapsed && "px-4 py-8 flex flex-col items-center")}>
         <div className="flex items-center gap-3 mb-2">
-          <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)] shrink-0">
-            <Cpu size={24} className="text-white" />
+          <div className="w-10 h-10 rounded-xl bg-purple-600 flex items-center justify-center shadow-[0_0_20px_rgba(168,85,247,0.4)] shrink-0 active:scale-95 transition-transform cursor-pointer">
+            <Cpu size={22} className="text-white" />
           </div>
           {!sidebarCollapsed && (
-            <h1 className="text-2xl font-black tracking-tighter bg-gradient-to-r from-white to-gray-500 text-transparent bg-clip-text italic">
-              DS-FORGE
-            </h1>
+            <div className="flex-1 flex justify-between items-center min-w-0">
+              <h1 className="text-xl font-bold tracking-tight text-white truncate">
+                DS <span className="text-purple-500">FORGE</span>
+              </h1>
+              <button
+                onClick={toggleActivityLog}
+                className="p-1.5 hover:bg-white/10 rounded-lg text-gray-500 hover:text-purple-400 transition-all active:scale-90"
+                title="System Activity Log"
+              >
+                <Terminal size={16} />
+              </button>
+            </div>
           )}
         </div>
         {!sidebarCollapsed && (
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 mt-4">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <p className="text-[10px] font-bold text-gray-600 uppercase tracking-[0.2em]">v1.0.0 • CPU-Engine</p>
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">v1.0.0 • CPU-Engine</p>
           </div>
         )}
       </div>
@@ -67,8 +79,8 @@ export default function Sidebar() {
               : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.02]",
             sidebarCollapsed && "justify-center px-0 h-12"
           )}>
-            <LayoutGrid size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", pathname === "/" && "text-purple-400")} />
-            {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight text-gray-300">Overview</span>}
+            <LayoutGrid size={20} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", pathname === "/" && "text-purple-400")} />
+            {!sidebarCollapsed && <span className="font-bold text-base tracking-tight text-gray-300">Overview</span>}
             {sidebarCollapsed && (
               <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
                 Overview
@@ -94,8 +106,8 @@ export default function Sidebar() {
                   : "text-gray-500 hover:text-gray-300 hover:bg-white/[0.02] border border-transparent",
                 sidebarCollapsed && "justify-center px-0 h-12"
               )}>
-                <item.icon size={18} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", isActive && "text-purple-400")} />
-                {!sidebarCollapsed && <span className="font-semibold text-sm tracking-tight">{item.name}</span>}
+                <item.icon size={20} className={cn("transition-transform duration-300 group-hover:scale-110 shrink-0", isActive && "text-purple-400")} />
+                {!sidebarCollapsed && <span className="font-bold text-base tracking-tight">{item.name}</span>}
                 {sidebarCollapsed && (
                   <div className="absolute left-full ml-4 px-2 py-1 rounded bg-black border border-white/10 text-white text-[10px] font-bold uppercase tracking-widest opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none whitespace-nowrap z-[120]">
                     {item.name}

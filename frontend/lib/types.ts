@@ -12,6 +12,7 @@ export interface ModelOption {
     name: string;
     type: string;
     default_params: Record<string, any>;
+    param_meta: Record<string, any>;
 }
 
 export interface TrainingRun {
@@ -24,6 +25,7 @@ export interface TrainingRun {
     stage?: string;
     metrics: Record<string, number> | null;
     detailed_report?: any;
+    logs: string[];
     error_message: string | null;
     created_at: string;
 }

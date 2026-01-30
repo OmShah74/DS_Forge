@@ -5,9 +5,10 @@ import { Dataset, ModelOption, TrainingRun } from "@/lib/types";
 import {
     BrainCircuit, Play, Activity, AlertCircle,
     CheckCircle, Loader2, Clock, Trash2,
-    Download, ChevronDown, ListFilter, Target, Box
+    Download, ChevronDown, ListFilter, Target, Box, Settings, Terminal, HelpCircle
 } from "lucide-react";
 import { useNotificationStore } from "@/store/notificationStore";
+import { useExplainabilityStore } from "@/store/explainabilityStore";
 
 export default function TrainingPage() {
     const { addToast, notifySystem, showConfirm } = useNotificationStore();
@@ -23,6 +24,8 @@ export default function TrainingPage() {
     const [selectedTarget, setSelectedTarget] = useState<string>("");
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
     const [selectedModelKey, setSelectedModelKey] = useState<string>("");
+    const [selectedParams, setSelectedParams] = useState<Record<string, any>>({});
+    const { openHelp } = useExplainabilityStore();
 
     // UI State
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -58,10 +61,21 @@ export default function TrainingPage() {
 
     const handleTargetChange = (val: string) => {
         setSelectedTarget(val);
-        // Automatically select all OTHER columns as features by default
         if (val) {
             setSelectedFeatures(columns.filter(c => c !== val));
         }
+    };
+
+    const handleModelChange = (key: string) => {
+        setSelectedModelKey(key);
+        const model = models.find(m => m.key === key);
+        if (model) {
+            setSelectedParams(model.default_params || {});
+        }
+    };
+
+    const updateParam = (key: string, val: any) => {
+        setSelectedParams(prev => ({ ...prev, [key]: val }));
     };
 
     const toggleFeature = (col: string) => {
@@ -83,7 +97,7 @@ export default function TrainingPage() {
                 target_column: selectedTarget,
                 feature_columns: selectedFeatures,
                 model_key: selectedModelKey,
-                parameters: {}
+                parameters: selectedParams
             });
             addToast("Training Sequence Initiated", "info");
             notifySystem("Compute Cluster Active", "A new model training run has been queued.");
@@ -118,7 +132,7 @@ export default function TrainingPage() {
     };
 
     return (
-        <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
+        <main className="max-w-[1600px] mx-auto h-[calc(100vh-80px)] overflow-y-auto space-y-12 animate-in fade-in duration-700 pr-4 custom-scrollbar">
             {/* Header */}
             <header className="flex flex-col gap-2 px-1">
                 <div className="flex items-center gap-3">
@@ -126,8 +140,16 @@ export default function TrainingPage() {
                         <BrainCircuit size={24} className="text-purple-500" />
                     </div>
                     <div>
-                        <h2 className="text-sm font-semibold text-purple-500 tracking-wider leading-none">Compute Studio</h2>
-                        <h1 className="text-3xl font-bold text-white mt-1 font-mono tracking-tight">Model <span className="text-purple-600">Training</span></h1>
+                        <h2 className="text-base font-bold text-purple-500 tracking-widest leading-none mb-1 uppercase">Compute Studio</h2>
+                        <h1 className="text-4xl font-black text-white mt-1 tracking-tight flex items-center gap-4 uppercase italic">
+                            Model <span className="text-purple-600">Training</span>
+                            <button
+                                onClick={() => openHelp('training')}
+                                className="p-2 hover:bg-white/5 rounded-full text-gray-600 hover:text-purple-400 transition-colors"
+                            >
+                                <HelpCircle size={20} />
+                            </button>
+                        </h1>
                     </div>
                 </div>
                 <p className="text-gray-400 text-base font-medium max-w-lg mt-2">
@@ -228,7 +250,7 @@ export default function TrainingPage() {
                             </label>
                             <select
                                 className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-medium"
-                                onChange={(e) => setSelectedModelKey(e.target.value)}
+                                onChange={(e) => handleModelChange(e.target.value)}
                                 value={selectedModelKey}
                             >
                                 <option value="" className="bg-[#04060c]">Select logic...</option>
@@ -239,6 +261,46 @@ export default function TrainingPage() {
                                 ))}
                             </select>
                         </div>
+
+                        {/* Hyperparameters Configurator */}
+                        {selectedModelKey && models.find(m => m.key === selectedModelKey)?.param_meta && (
+                            <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-4">
+                                <label className="text-[10px] font-bold text-purple-400 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
+                                    <Settings size={12} /> Tuning Parameters
+                                </label>
+                                <div className="space-y-4">
+                                    {Object.entries(models.find(m => m.key === selectedModelKey)!.param_meta).map(([key, meta]: [string, any]) => (
+                                        <div key={key} className="space-y-2">
+                                            <div className="flex justify-between items-center px-1">
+                                                <span className="text-xs font-semibold text-gray-400">{meta.label || key}</span>
+                                                <span className="text-xs font-mono text-purple-400">{selectedParams[key] ?? 'Default'}</span>
+                                            </div>
+                                            {meta.type === 'number' ? (
+                                                <input
+                                                    type="range"
+                                                    min={meta.min}
+                                                    max={meta.max}
+                                                    step={meta.step}
+                                                    value={selectedParams[key] ?? meta.min}
+                                                    onChange={(e) => updateParam(key, Number(e.target.value))}
+                                                    className="w-full h-1.5 bg-white/5 rounded-lg appearance-none cursor-pointer accent-purple-600"
+                                                />
+                                            ) : meta.type === 'select' ? (
+                                                <select
+                                                    value={selectedParams[key]}
+                                                    onChange={(e) => updateParam(key, e.target.value)}
+                                                    className="w-full bg-black/40 border border-white/10 rounded-lg p-2 text-xs text-white outline-none"
+                                                >
+                                                    {meta.options.map((opt: string) => (
+                                                        <option key={opt} value={opt}>{opt}</option>
+                                                    ))}
+                                                </select>
+                                            ) : null}
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
                     </div>
 
                     <button
@@ -327,21 +389,49 @@ export default function TrainingPage() {
                                         </div>
                                     </div>
 
-                                    {/* Metrics Footer */}
+                                    {/* Evaluation Statistics - Intensive Update */}
                                     {run.status === 'completed' && run.metrics && (
-                                        <div className="pt-4 border-t border-white/5 flex flex-wrap gap-4">
+                                        <div className="grid grid-cols-2 md:grid-cols-4 gap-4 py-6 border-y border-white/5 bg-white/[0.01] rounded-xl px-6">
                                             {Object.entries(run.metrics).map(([k, v]) => (
-                                                <div key={k} className="flex flex-col gap-1">
-                                                    <span className="text-[8px] font-black text-gray-600 uppercase tracking-widest">{k}</span>
-                                                    <span className="text-emerald-400 font-mono font-bold text-xs">{v.toFixed(4)}</span>
+                                                <div key={k} className="flex flex-col">
+                                                    <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">{k.replace('_', ' ')}</span>
+                                                    <span className="text-2xl font-mono font-bold text-purple-400 tracking-tighter">{typeof v === 'number' ? v.toFixed(4) : v}</span>
                                                 </div>
                                             ))}
                                         </div>
                                     )}
 
+                                    {/* TERMINAL CONSOLE */}
+                                    {(run.status === 'running' || run.status === 'completed' || run.status === 'failed') && (
+                                        <div className="space-y-2">
+                                            <div className="flex items-center gap-2 px-1">
+                                                <Terminal size={12} className="text-purple-500" />
+                                                <span className="text-[10px] font-bold text-gray-500 uppercase tracking-widest">Compute Terminal</span>
+                                            </div>
+                                            <div className="bg-[#050608] border border-white/5 rounded-xl p-4 font-mono text-[11px] leading-relaxed max-h-[160px] overflow-y-auto custom-scrollbar shadow-inner">
+                                                {run.logs && run.logs.length > 0 ? (
+                                                    run.logs.map((log, i) => (
+                                                        <div key={i} className="flex gap-4 group">
+                                                            <span className="text-gray-700 select-none">{i + 1}</span>
+                                                            <span className={log.includes('ERROR') ? 'text-rose-400' : 'text-emerald-400/80'}>{log}</span>
+                                                        </div>
+                                                    ))
+                                                ) : (
+                                                    <div className="text-gray-700 animate-pulse">Establishing handshake with training engine...</div>
+                                                )}
+                                                {run.status === 'running' && (
+                                                    <div className="mt-2 text-purple-500 flex items-center gap-2">
+                                                        <span className="w-1.5 h-1.5 rounded-full bg-purple-500 animate-pulse"></span>
+                                                        Listening for telemetry broadcast...
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+
                                     {run.status === 'failed' && (
-                                        <div className="pt-4 border-t border-white/5">
-                                            <p className="text-rose-400 text-[10px] font-bold uppercase tracking-widest italic">{run.error_message}</p>
+                                        <div className="p-4 rounded-xl bg-rose-500/5 border border-rose-500/10">
+                                            <p className="text-rose-400 text-xs font-medium">{run.error_message}</p>
                                         </div>
                                     )}
                                 </div>
@@ -353,6 +443,6 @@ export default function TrainingPage() {
                     <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-600/[0.01] blur-[100px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 </div>
             </div>
-        </div>
+        </main>
     );
 }

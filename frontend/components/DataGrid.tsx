@@ -35,8 +35,8 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
             <TableIcon size={18} className="text-emerald-400" />
           </div>
           <div className="flex flex-col">
-            <span className="text-[10px] font-black text-gray-500 uppercase tracking-[0.2em] leading-none">Stream Analysis</span>
-            <span className="text-sm font-bold text-white tracking-tight mt-1">Dataset Inspector</span>
+            <span className="text-xs font-black text-gray-500 uppercase tracking-[0.2em] leading-none">Stream Analysis</span>
+            <span className="text-base font-bold text-white tracking-tight mt-1">Dataset Inspector</span>
           </div>
         </div>
         <div className="flex items-center gap-3">
@@ -61,7 +61,7 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
           <thead className="sticky top-0 z-30">
             <tr className="bg-[#112229]/95 backdrop-blur-xl">
               {columns.map((col) => (
-                <th key={col} className="p-4 text-[10px] font-bold text-emerald-300/80 border-b border-r border-white/5 uppercase tracking-[0.15em] select-none text-center">
+                <th key={col} className="p-4 text-xs font-bold text-emerald-300/80 border-b border-r border-white/5 uppercase tracking-[0.15em] select-none text-center">
                   {col}
                 </th>
               ))}
@@ -78,7 +78,7 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
                   return (
                     <td
                       key={`${idx}-${col}`}
-                      className={`p-3 text-xs border-r border-white/[0.02] whitespace-nowrap font-medium transition-all
+                      className={`p-4 text-sm border-r border-white/[0.02] whitespace-nowrap font-medium transition-all
                         ${isNull ? 'bg-rose-500/20 text-rose-400 italic font-black text-center' :
                           isNum ? 'text-cyan-400 font-mono text-center' :
                             'text-gray-400 group-hover:text-emerald-100'}

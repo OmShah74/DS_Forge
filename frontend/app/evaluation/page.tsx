@@ -5,8 +5,9 @@ import { TrainingRun } from "@/lib/types";
 import {
     BarChart as BarChartIcon, TrendingUp, Grid,
     Activity, ChevronRight, Zap, PieChart,
-    ArrowUpRight, Target
+    ArrowUpRight, Target, HelpCircle
 } from "lucide-react";
+import { useExplainabilityStore } from "@/store/explainabilityStore";
 import { useNotificationStore } from "@/store/notificationStore";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
@@ -18,6 +19,7 @@ export default function EvaluationPage() {
     const { addToast } = useNotificationStore();
     const [runs, setRuns] = useState<TrainingRun[]>([]);
     const [selectedRun, setSelectedRun] = useState<TrainingRun | null>(null);
+    const { openHelp } = useExplainabilityStore();
 
     useEffect(() => {
         api.get("/training/runs").then(res => setRuns(res.data));
@@ -159,7 +161,7 @@ export default function EvaluationPage() {
     };
 
     return (
-        <div className="h-[calc(100vh-100px)] flex gap-10 animate-in fade-in duration-700 pb-10">
+        <main className="max-w-[1600px] mx-auto h-[calc(100vh-80px)] flex gap-10 animate-in fade-in duration-700">
             {/* Sidebar List */}
             <div className="w-96 glass-panel rounded-3xl border-white/5 bg-black/20 flex flex-col overflow-hidden shadow-2xl relative">
                 <div className="p-6 border-b border-white/5 shrink-0 bg-black/20">
@@ -230,8 +232,16 @@ export default function EvaluationPage() {
                                         <TrendingUp className="text-emerald-500" size={24} />
                                     </div>
                                     <div>
-                                        <h2 className="text-sm font-semibold text-purple-500 tracking-wide mb-1">Telemetry Analysis</h2>
-                                        <h1 className="text-3xl font-bold text-white tracking-tight">Logic <span className="text-purple-600">Artifact</span> Report</h1>
+                                        <h2 className="text-base font-bold text-purple-500 tracking-widest mb-1 uppercase">Telemetry Analysis</h2>
+                                        <h1 className="text-4xl font-black text-white tracking-tight flex items-center gap-4">
+                                            Logic <span className="text-purple-600">Artifact</span> Report
+                                            <button
+                                                onClick={() => openHelp('evaluation')}
+                                                className="p-2 hover:bg-white/5 rounded-full text-gray-600 hover:text-purple-400 transition-colors"
+                                            >
+                                                <HelpCircle size={20} />
+                                            </button>
+                                        </h1>
                                     </div>
                                 </div>
                                 <p className="text-gray-400 text-sm font-medium px-1">Validated performance metrics for instance #{selectedRun.id}</p>
@@ -262,10 +272,10 @@ export default function EvaluationPage() {
                         {/* Prime Metrics Grid */}
                         <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
                             {selectedRun.metrics && Object.entries(selectedRun.metrics).map(([k, v]) => (
-                                <div key={k} className="glass-panel p-6 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all">
-                                    <h3 className="text-xs font-semibold text-gray-500 tracking-wide mb-3 group-hover:text-purple-400 transition-colors">{k.replace(/_/g, ' ')}</h3>
-                                    <p className="text-3xl font-mono font-bold text-white">{typeof v === 'number' ? v.toFixed(5) : v}</p>
-                                    <div className="absolute top-0 right-0 w-20 h-20 bg-purple-600/5 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                <div key={k} className="glass-panel p-8 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all">
+                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 group-hover:text-purple-400 transition-colors">{k.replace(/_/g, ' ')}</h3>
+                                    <p className="text-4xl font-mono font-bold text-white tracking-tighter">{typeof v === 'number' ? v.toFixed(5) : v}</p>
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                 </div>
                             ))}
                         </div>
@@ -339,6 +349,6 @@ export default function EvaluationPage() {
                 {/* Visual decoration */}
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/[0.03] blur-[150px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
-        </div>
+        </main>
     );
 }

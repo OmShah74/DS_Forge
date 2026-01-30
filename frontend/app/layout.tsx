@@ -3,6 +3,8 @@ import "./globals.css";
 import Sidebar from "@/components/layout/Sidebar";
 import MainContentWrapper from "@/components/layout/MainContentWrapper";
 import ToastContainer from "@/components/ToastContainer";
+import ActivityLog from "@/components/ActivityLog";
+import HelpPanel from "@/components/HelpPanel";
 
 export const metadata: Metadata = {
   title: "DS-Forge | Data Science OS",
@@ -21,6 +23,8 @@ export default function RootLayout({
         <MainContentWrapper>
           {children}
         </MainContentWrapper>
+        <ActivityLog />
+        <HelpPanel />
         <ToastContainer />
       </body>
     </html>

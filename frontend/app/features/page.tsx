@@ -5,8 +5,10 @@ import { Dataset } from "@/lib/types";
 import DataGrid from "@/components/DataGrid";
 import {
     FlaskConical, Play, Sparkles, Filter,
-    Settings, ListChecks, Wand2, Info
+    Settings, ListChecks, Wand2, Info, HelpCircle,
+    Database, ChevronRight, Search, Table as TableIcon, Layers, Zap
 } from "lucide-react";
+import { useExplainabilityStore } from "@/store/explainabilityStore";
 import { useNotificationStore } from "@/store/notificationStore";
 
 export default function FeatureEngineeringPage() {
@@ -21,6 +23,7 @@ export default function FeatureEngineeringPage() {
     const [selectedCols, setSelectedCols] = useState<string[]>([]);
     const [pcaComponents, setPcaComponents] = useState(2);
     const [loading, setLoading] = useState(false);
+    const { openHelp } = useExplainabilityStore();
 
     useEffect(() => {
         loadDatasets();
@@ -75,7 +78,7 @@ export default function FeatureEngineeringPage() {
     };
 
     return (
-        <main className="h-[calc(100vh-100px)] flex gap-8 overflow-hidden animate-in fade-in duration-700 pb-10">
+        <main className="max-w-[1600px] mx-auto h-[calc(100vh-80px)] flex gap-8 animate-in fade-in duration-700">
             {/* LEFT: Controls */}
             <div className="w-96 flex flex-col gap-8 shrink-0">
 
@@ -114,11 +117,17 @@ export default function FeatureEngineeringPage() {
 
                 {/* Mutation Wizard */}
                 <div className="glass-panel p-8 rounded-[2rem] flex flex-col h-[60%] border-white/5 overflow-hidden shadow-2xl bg-black/40 relative">
-                    <div className="flex items-center gap-3 px-1 mb-8 shrink-0">
-                        <div className="p-2 rounded-lg bg-purple-600/10 border border-purple-500/20">
-                            <Wand2 size={16} className="text-purple-500" />
-                        </div>
-                        <h2 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Mutation Wizard</h2>
+                    <div className="flex flex-col gap-1 mb-8">
+                        <h1 className="text-2xl font-bold text-white flex items-center gap-3 tracking-tight">
+                            Mutation <span className="text-purple-600">Wizard</span>
+                            <button
+                                onClick={() => openHelp('features')}
+                                className="p-1.5 hover:bg-white/10 rounded-full text-gray-500 hover:text-purple-400 transition-colors"
+                            >
+                                <HelpCircle size={18} />
+                            </button>
+                        </h1>
+                        <p className="text-xs font-medium text-gray-500 italic">Evolve raw columns into high-signal feature vectors</p>
                     </div>
 
                     <div className="flex-1 overflow-y-auto space-y-8 pr-2 custom-scrollbar pb-6">
