@@ -25,6 +25,21 @@ class Dataset(Base):
     # Relationships
     children = relationship("Dataset", backref="parent", remote_side=[id])
     training_runs = relationship("TrainingRun", back_populates="dataset")
+    activities = relationship("SystemActivity", back_populates="dataset")
+
+class SystemActivity(Base):
+    __tablename__ = "system_activities"
+
+    id = Column(Integer, primary_key=True, index=True)
+    dataset_id = Column(Integer, ForeignKey("datasets.id"), nullable=True)
+    operation = Column(String) # "upload", "cleaning", "feature_eng", "training"
+    status = Column(String)    # "success", "error"
+    message = Column(String)
+    metadata_json = Column(JSON, nullable=True) # Details like rows affected, etc.
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    # Relationships
+    dataset = relationship("Dataset", back_populates="activities")
 
 class TrainingRun(Base):
     __tablename__ = "training_runs"
@@ -47,6 +62,7 @@ class TrainingRun(Base):
     # Results
     metrics = Column(JSON, nullable=True)    # Simple metrics (Accuracy, F1)
     detailed_report = Column(JSON, nullable=True) # Heavy data (Confusion Matrix, ROC points)
+    logs = Column(JSON, default=[]) # Real-time training terminal messages
     artifact_path = Column(String, nullable=True) 
     
     created_at = Column(DateTime, default=datetime.utcnow)

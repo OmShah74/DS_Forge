@@ -7,7 +7,7 @@ import uuid
 import pandas as pd
 
 from app.db.session import get_db
-from app.db.models import Dataset
+from app.db.models import Dataset, SystemActivity
 from app.data.feature_engineering.engine import FeatureEngine
 from app.core.config import settings
 
@@ -54,6 +54,23 @@ def apply_feature_engineering(request: FeatureRequest, db: Session = Depends(get
     )
     
     db.add(new_dataset)
+    
+    # 6. Log Activity
+    activity = SystemActivity(
+        dataset_id=new_dataset.id,
+        operation="feature_eng",
+        status="success",
+        message=f"Applied mutation '{request.operation}' to {source_ds.filename}",
+        metadata_json={
+            "operation": request.operation,
+            "params": request.params,
+            "rows": len(processed_df),
+            "cols": len(processed_df.columns),
+            "output_dataset": new_ds_name
+        }
+    )
+    db.add(activity)
+
     db.commit()
     db.refresh(new_dataset)
 

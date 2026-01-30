@@ -8,7 +8,7 @@ import os
 import uuid
 
 from app.db.session import get_db
-from app.db.models import Dataset
+from app.db.models import Dataset, SystemActivity
 from app.data.cleaning.engine import CleaningEngine
 from app.core.config import settings
 
@@ -90,6 +90,23 @@ def apply_cleaning(request: CleaningRequest, db: Session = Depends(get_db)):
     )
     
     db.add(new_dataset)
+    
+    # 6. Log Activity
+    activity = SystemActivity(
+        dataset_id=new_dataset.id,
+        operation="cleaning",
+        status="success",
+        message=f"Applied {request.operation} to {source_ds.filename}",
+        metadata_json={
+            "operation": request.operation,
+            "params": request.params,
+            "rows": len(cleaned_df),
+            "cols": len(cleaned_df.columns),
+            "output_dataset": new_ds_name
+        }
+    )
+    db.add(activity)
+    
     db.commit()
     db.refresh(new_dataset)
 

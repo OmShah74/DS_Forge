@@ -8,7 +8,7 @@ import io
 import pandas as pd
 import numpy as np
 from app.db.session import get_db
-from app.db.models import Dataset
+from app.db.models import Dataset, SystemActivity
 from app.data.ingestion.loader import IngestionEngine
 import os
 
@@ -52,6 +52,22 @@ async def upload_dataset(
         column_count=metadata['column_count']
     )
     db.add(db_dataset)
+    
+    # 3. Log Activity
+    activity = SystemActivity(
+        dataset_id=db_dataset.id,
+        operation="upload",
+        status="success",
+        message=f"Ingested new artifact: {db_dataset.filename}",
+        metadata_json={
+            "source_type": db_dataset.source_type,
+            "rows": db_dataset.row_count,
+            "cols": db_dataset.column_count,
+            "size_kb": round(db_dataset.size_bytes / 1024, 2)
+        }
+    )
+    db.add(activity)
+    
     db.commit()
     db.refresh(db_dataset)
     

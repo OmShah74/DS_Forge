@@ -30,6 +30,7 @@ class TrainingRunResponse(BaseModel):
     stage: Optional[str]
     metrics: Optional[Dict[str, Any]]
     detailed_report: Optional[Dict[str, Any]]
+    logs: List[str] = []
     created_at: datetime
     error_message: Optional[str]
 
