@@ -12,7 +12,8 @@ import { useNotificationStore } from "@/store/notificationStore";
 import {
     BarChart, Bar, XAxis, YAxis, CartesianGrid,
     Tooltip, ResponsiveContainer, Cell,
-    LineChart, Line, AreaChart, Area
+    LineChart, Line, AreaChart, Area,
+    RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
 
 export default function EvaluationPage() {
@@ -104,26 +105,48 @@ export default function EvaluationPage() {
         );
     };
 
+    const MetricsRadarChart = ({ metrics }: { metrics: Record<string, number> }) => {
+        const data = Object.entries(metrics).map(([subject, A]) => ({ subject, A, fullMark: 1 }));
+        return (
+            <div className="h-64 w-full">
+                <ResponsiveContainer width="100%" height="100%">
+                    <RadarChart cx="50%" cy="50%" outerRadius="80%" data={data}>
+                        <PolarGrid stroke="#374151" />
+                        <PolarAngleAxis dataKey="subject" tick={{ fill: '#9CA3AF', fontSize: 10 }} />
+                        <PolarRadiusAxis angle={30} domain={[0, 1]} tick={false} axisLine={false} />
+                        <Radar name="Model Performance" dataKey="A" stroke="#8884d8" fill="#8884d8" fillOpacity={0.6} />
+                        <Tooltip contentStyle={{ backgroundColor: '#080c18', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                    </RadarChart>
+                </ResponsiveContainer>
+            </div>
+        );
+    };
+
     const ResidualsChart = ({ actual, predicted }: { actual: number[], predicted: number[] }) => {
         const chartData = actual.map((act, i) => ({
             index: i,
             actual: act,
-            predicted: predicted[i]
+            predicted: predicted[i],
+            error: act - predicted[i]
         }));
 
         return (
             <div className="h-64 w-full">
                 <ResponsiveContainer width="100%" height="100%">
-                    <LineChart data={chartData}>
+                    <AreaChart data={chartData}>
+                        <defs>
+                            <linearGradient id="colorError" x1="0" y1="0" x2="0" y2="1">
+                                <stop offset="5%" stopColor="#f43f5e" stopOpacity={0.8} />
+                                <stop offset="95%" stopColor="#f43f5e" stopOpacity={0} />
+                            </linearGradient>
+                        </defs>
                         <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.05)" vertical={false} />
                         <XAxis dataKey="index" hide />
                         <YAxis tick={{ fill: '#4b5563', fontSize: 9 }} />
-                        <Tooltip
-                            contentStyle={{ backgroundColor: '#080c18', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }}
-                        />
+                        <Tooltip contentStyle={{ backgroundColor: '#080c18', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '12px' }} />
+                        <Area type="monotone" dataKey="error" stroke="#f43f5e" fillOpacity={1} fill="url(#colorError)" />
                         <Line type="step" dataKey="actual" stroke="#4b5563" strokeWidth={1} dot={false} strokeDasharray="3 3" />
-                        <Line type="monotone" dataKey="predicted" stroke="#9333ea" strokeWidth={2} dot={{ r: 2, fill: '#9333ea' }} />
-                    </LineChart>
+                    </AreaChart>
                 </ResponsiveContainer>
             </div>
         );
@@ -269,16 +292,26 @@ export default function EvaluationPage() {
                             </div>
                         </header>
 
-                        {/* Prime Metrics Grid */}
-                        <div className="grid grid-cols-1 md:grid-cols-4 gap-6">
+                        {/* Prime Metrics Grid - Responsive Layout Fix */}
+                        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-4 xl:grid-cols-5 gap-4">
                             {selectedRun.metrics && Object.entries(selectedRun.metrics).map(([k, v]) => (
-                                <div key={k} className="glass-panel p-8 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all">
-                                    <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 group-hover:text-purple-400 transition-colors">{k.replace(/_/g, ' ')}</h3>
-                                    <p className="text-4xl font-mono font-bold text-white tracking-tighter">{typeof v === 'number' ? v.toFixed(5) : v}</p>
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                <div key={k} className="glass-panel p-5 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all flex flex-col justify-between h-32">
+                                    <h3 className="text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-2 group-hover:text-purple-400 transition-colors truncate" title={k.replace(/_/g, ' ')}>{k.replace(/_/g, ' ')}</h3>
+                                    <p className="text-2xl font-mono font-bold text-white tracking-tighter truncate" title={String(v)}>{typeof v === 'number' ? v.toFixed(5) : v}</p>
                                 </div>
                             ))}
                         </div>
+
+                        {/* Radar Chart for Overall Shape */}
+                        {selectedRun.metrics && (
+                            <div className="glass-panel p-8 rounded-3xl border-white/5 bg-black/30 space-y-6">
+                                <div className="flex items-center gap-3 border-b border-white/5 pb-4">
+                                    <div className="p-2 rounded-lg bg-indigo-600/10"><Activity size={14} className="text-indigo-500" /></div>
+                                    <h3 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Performance Shape</h3>
+                                </div>
+                                <MetricsRadarChart metrics={selectedRun.metrics} />
+                            </div>
+                        )}
 
                         {/* Diagnostic Visuals */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
@@ -321,7 +354,7 @@ export default function EvaluationPage() {
                                 <div className="glass-panel p-8 rounded-3xl border-white/5 bg-black/30 lg:col-span-2 space-y-6">
                                     <div className="flex items-center gap-3 border-b border-white/5 pb-4">
                                         <div className="p-2 rounded-lg bg-purple-600/10"><Activity size={14} className="text-purple-500" /></div>
-                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Variance Stream (Actual vs Predicted)</h3>
+                                        <h3 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Error Distribution (Residuals)</h3>
                                     </div>
                                     <ResidualsChart actual={selectedRun.detailed_report.actual} predicted={selectedRun.detailed_report.predicted} />
                                 </div>

@@ -7,8 +7,10 @@ from datetime import datetime
 from sqlalchemy.orm import Session
 from sklearn.model_selection import train_test_split
 from sklearn.metrics import (
-    accuracy_score, f1_score, mean_squared_error, 
-    r2_score, confusion_matrix, roc_curve, auc
+    accuracy_score, f1_score, mean_squared_error, mean_absolute_error, r2_score,
+    confusion_matrix, roc_curve, auc, precision_score, recall_score, log_loss,
+    matthews_corrcoef, cohen_kappa_score, balanced_accuracy_score,
+    explained_variance_score, max_error, median_absolute_error, mean_absolute_percentage_error
 )
 from sklearn.preprocessing import LabelEncoder
 
@@ -70,9 +72,11 @@ class TrainingEngine:
             db.commit()
 
             # Simple Label Encoding for categorical features
+            encoders = {}
             for col in X.select_dtypes(include=['object', 'category']).columns:
                 le = LabelEncoder()
                 X[col] = le.fit_transform(X[col].astype(str))
+                encoders[col] = le
             
             y_is_categorical = False
             model_info = ModelRegistry.get_model(run.model_name)
@@ -114,21 +118,39 @@ class TrainingEngine:
             report = {}
 
             if model_info["type"] == "classification":
+                # --- CLASSIFICATION METRICS (10+) ---
                 metrics["accuracy"] = float(accuracy_score(y_test, preds))
                 metrics["f1_weighted"] = float(f1_score(y_test, preds, average='weighted'))
+                metrics["f1_macro"] = float(f1_score(y_test, preds, average='macro'))
+                metrics["precision_weighted"] = float(precision_score(y_test, preds, average='weighted', zero_division=0))
+                metrics["recall_weighted"] = float(recall_score(y_test, preds, average='weighted', zero_division=0))
+                metrics["balanced_accuracy"] = float(balanced_accuracy_score(y_test, preds))
+                metrics["mcc"] = float(matthews_corrcoef(y_test, preds))
+                metrics["cohen_kappa"] = float(cohen_kappa_score(y_test, preds))
                 
+                # Log Loss (needs probabilities)
+                if hasattr(clf, "predict_proba"):
+                    try:
+                        probs = clf.predict_proba(X_test)
+                        metrics["log_loss"] = float(log_loss(y_test, probs))
+                        
+                        # ROC AUC (Handle Binary vs Multi-class)
+                        if len(target_classes) == 2:
+                            # Binary case rely on probs of positive class
+                            fpr, tpr, _ = roc_curve(y_test, probs[:, 1])
+                            metrics["roc_auc"] = float(auc(fpr, tpr))
+                            report["roc"] = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": metrics["roc_auc"]}
+                        else:
+                            # Multi-class One-vs-Rest strategy for AUC could be added here
+                            pass
+                    except Exception as e:
+                        print(f"Log loss calculation skipped: {e}")
+
                 # Detailed Report: Confusion Matrix
                 cm = confusion_matrix(y_test, preds)
                 report["type"] = "classification"
                 report["confusion_matrix"] = cm.tolist()
                 report["classes"] = target_classes
-                
-                # ROC Curve for binary/multi
-                if hasattr(clf, "predict_proba"):
-                    probs = clf.predict_proba(X_test)
-                    if len(target_classes) == 2:
-                        fpr, tpr, _ = roc_curve(y_test, probs[:, 1])
-                        report["roc"] = {"fpr": fpr.tolist(), "tpr": tpr.tolist(), "auc": auc(fpr, tpr)}
 
                 # Feature Importance
                 importances = None
@@ -141,8 +163,17 @@ class TrainingEngine:
                     report["feature_importance"] = dict(zip(X.columns, importances.tolist()))
 
             else:
+                # --- REGRESSION METRICS (7+) ---
                 metrics["rmse"] = float(np.sqrt(mean_squared_error(y_test, preds)))
+                metrics["mae"] = float(mean_absolute_error(y_test, preds))
                 metrics["r2"] = float(r2_score(y_test, preds))
+                metrics["explained_variance"] = float(explained_variance_score(y_test, preds))
+                metrics["max_error"] = float(max_error(y_test, preds))
+                metrics["median_absolute_error"] = float(median_absolute_error(y_test, preds))
+                try:
+                    metrics["mape"] = float(mean_absolute_percentage_error(y_test, preds))
+                except:
+                    metrics["mape"] = -1.0 # Handle division by zero potentially
                 
                 limit = 100
                 report["type"] = "regression"

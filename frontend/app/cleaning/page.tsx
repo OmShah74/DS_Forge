@@ -13,6 +13,7 @@ function cn(...inputs: ClassValue[]) {
 }
 
 import { useNotificationStore } from "@/store/notificationStore";
+import { div } from "framer-motion/client";
 
 interface PreviewData {
     columns: string[];
@@ -159,16 +160,16 @@ export default function CleaningPage() {
                     </div>
                 </div>
 
-                {/* Right: Workspace */}
-                <div className="flex-1 flex flex-col gap-6 min-h-0 overflow-hidden">
-                    {/* Controls - Fixed height with internal scroll */}
-                    <div className="glass-panel rounded-2xl border-white/5 flex flex-col shrink-0 overflow-hidden shadow-lg">
+                {/* Right Area: Controls & Workspace */}
+                <div className="flex-1 flex gap-6 min-h-0 overflow-hidden">
+                    {/* Middle: Control Console - Fixed Width Column */}
+                    <div className="w-[400px] glass-panel rounded-2xl border-white/5 flex flex-col shrink-0 overflow-hidden shadow-lg h-full">
                         <div className="p-5 border-b border-white/5 bg-white/[0.01] shrink-0">
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-3 flex-1 max-w-sm">
                                     <label className="text-sm font-semibold text-purple-500 tracking-wide px-1">Control Console</label>
                                     <select
-                                        className="w-full bg-black/40 border border-white/10 rounded-xl p-3 text-white text-base focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                                        className="w-full bg-[#0F172A] border border-white/20 rounded-xl p-3 text-white text-base focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold shadow-sm"
                                         value={operation}
                                         onChange={(e) => setOperation(e.target.value)}
                                     >
@@ -207,8 +208,8 @@ export default function CleaningPage() {
                             </div>
                         </div>
 
-                        {/* Dynamics Area - Internal Scroll */}
-                        <div className="p-6 overflow-y-auto max-h-[300px] custom-scrollbar bg-black/20">
+                        {/* Dynamics Area - Fills remaining height */}
+                        <div className="p-6 overflow-y-auto flex-1 custom-scrollbar bg-black/20">
                             <CleaningControls
                                 operation={operation}
                                 columns={preview?.columns || []}
@@ -217,39 +218,39 @@ export default function CleaningPage() {
                         </div>
                     </div>
 
-                    {/* Preview Area - Flexible */}
-                    <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden relative min-h-0 shadow-lg">
-                        <div className="flex items-center justify-between mb-4 shrink-0 px-1">
-                            <div className="flex items-center gap-2">
-                                <Layers size={14} className="text-purple-500" />
-                                <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Stream Analysis</h2>
-                            </div>
-                            {preview && (
-                                <span className="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded border border-white/5">
-                                    {preview.columns.length} Features • {preview.total_rows} Records
-                                </span>
-                            )}
-                        </div>
+                </div>
 
-                        <div className="flex-1 min-h-0 bg-black/40 rounded-xl border border-white/5 overflow-hidden relative">
-                            {preview ? (
-                                <div className="absolute inset-0">
-                                    <DataGrid
-                                        columns={preview.columns}
-                                        data={preview.data}
-                                        datasetId={selectedId || undefined}
-                                    />
-                                </div>
-                            ) : (
-                                <div className="h-full flex flex-col items-center justify-center text-gray-700">
-                                    <TableIcon size={32} className="mb-4 opacity-5" />
-                                    <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Awaiting Data Stream Selection</p>
-                                </div>
-                            )}
+                {/* Right: Stream Analysis - Flexible */}
+                <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden h-full shadow-lg">
+                    <div className="flex items-center justify-between mb-4 shrink-0 px-1">
+                        <div className="flex items-center gap-2">
+                            <Layers size={14} className="text-purple-500" />
+                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Stream Analysis</h2>
                         </div>
+                        {preview && (
+                            <span className="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded border border-white/5">
+                                {preview.columns.length} Features • {preview.total_rows} Records
+                            </span>
+                        )}
+                    </div>
+
+                    <div className="flex-1 min-h-0 bg-black/40 rounded-xl border border-white/5 overflow-hidden flex flex-col">
+                        {preview ? (
+                            <DataGrid
+                                columns={preview.columns}
+                                data={preview.data}
+                                datasetId={selectedId || undefined}
+                            />
+                        ) : (
+                            <div className="h-full flex flex-col items-center justify-center text-gray-700">
+                                <TableIcon size={32} className="mb-4 opacity-5" />
+                                <p className="text-[10px] font-black uppercase tracking-widest opacity-40">Awaiting Data Stream Selection</p>
+                            </div>
+                        )}
                     </div>
                 </div>
             </div>
         </div>
+
     );
 }

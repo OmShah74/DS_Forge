@@ -13,6 +13,8 @@ export interface ModelOption {
     type: string;
     default_params: Record<string, any>;
     param_meta: Record<string, any>;
+    description?: string;
+    formula?: string;
 }
 
 export interface TrainingRun {
