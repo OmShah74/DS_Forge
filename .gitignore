@@ -22,3 +22,5 @@ backend/app/storage/artifacts/*
 backend/app/storage/datasets/*
 backend/app/storage/models/*
 !backend/app/storage/**/.gitkeep
+backend/app/db/ds-forge.sqlite-shm
+backend/app/db/ds-forge.sqlite-wal

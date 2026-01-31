@@ -1,6 +1,7 @@
 "use client";
 import React from 'react';
-import { Settings, Shield, Bell, Database, Monitor, Cpu, ChevronRight } from 'lucide-react';
+import { Settings, Shield, Bell, Database, Monitor, Cpu, ChevronRight, Brain, Key, Eye, EyeOff } from 'lucide-react';
+import { useConfigStore } from '@/store/configStore';
 
 export default function SettingsPage() {
     const sections = [
@@ -42,8 +43,21 @@ export default function SettingsPage() {
         }
     ];
 
+    const { llmProvider, apiKey, modelName, setProvider, setApiKey, setModelName } = useConfigStore();
+    const [isVisible, setIsVisible] = React.useState(false);
+
+    const handleProviderChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newProvider = e.target.value as any;
+        setProvider(newProvider);
+        // Auto-set default model for convenience
+        if (newProvider === 'openai') setModelName('gpt-4o');
+        if (newProvider === 'groq') setModelName('llama3-70b-8192');
+        if (newProvider === 'gemini') setModelName('gemini-1.5-pro');
+        if (newProvider === 'openrouter') setModelName('anthropic/claude-3-opus');
+    };
+
     return (
-        <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700">
+        <div className="max-w-4xl mx-auto space-y-12 animate-in fade-in slide-in-from-bottom-4 duration-700 pb-20">
             {/* Header */}
             <div className="flex flex-col gap-2 px-1">
                 <div className="flex items-center gap-3">
@@ -51,55 +65,113 @@ export default function SettingsPage() {
                         <Settings className="text-purple-500" size={20} />
                     </div>
                     <div>
-                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">OS Configuration</h2>
-                        <h1 className="text-3xl font-black text-white italic mt-1 font-mono uppercase">System <span className="text-purple-600">Settings</span></h1>
+                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">System Configuration</h2>
+                        <h1 className="text-3xl font-black text-white italic mt-1 font-mono uppercase">Settings <span className="text-purple-600">& Secrets</span></h1>
                     </div>
                 </div>
                 <p className="text-gray-500 text-xs font-medium max-w-lg mt-2">
-                    Manage your DS-FORGE environment parameters, security protocols, and hardware acceleration settings.
+                    Configure your AI Analysis engine. API Keys are stored <strong>locally</strong> in your browser and are never saved to the backend database.
                 </p>
             </div>
 
-            {/* Grid */}
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
+            {/* AI Configuration Panel */}
+            <div className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/20 shadow-2xl space-y-8">
+                <div className="flex items-start justify-between">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10">
+                            <Brain size={20} className="text-purple-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-sm font-black text-white uppercase tracking-tight">AI Analyst Engine</h3>
+                            <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter mt-1">LLM Provider & Credentials</p>
+                        </div>
+                    </div>
+                </div>
+
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    {/* Provider Selection */}
+                    <div className="space-y-3">
+                        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-tight ml-1">Provider Service</label>
+                        <div className="relative group">
+                            <select
+                                value={llmProvider}
+                                onChange={handleProviderChange}
+                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-bold"
+                            >
+                                <option value="openai">OpenAI (GPT)</option>
+                                <option value="groq">Groq (Llama/Mixtral)</option>
+                                <option value="gemini">Google Gemini</option>
+                                <option value="openrouter">OpenRouter (Aggregator)</option>
+                            </select>
+                            <ChevronRight className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 pointer-events-none group-hover:text-purple-500 transition-colors" size={16} />
+                        </div>
+                    </div>
+
+                    {/* Model Name */}
+                    <div className="space-y-3">
+                        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-tight ml-1">Target Model ID</label>
+                        <input
+                            type="text"
+                            value={modelName}
+                            onChange={(e) => setModelName(e.target.value)}
+                            placeholder="e.g. gpt-4-turbo"
+                            className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-700 font-mono"
+                        />
+                    </div>
+
+                    {/* API Key */}
+                    <div className="space-y-3 md:col-span-2">
+                        <label className="text-[11px] font-bold text-gray-400 uppercase tracking-tight ml-1">Secret API Key</label>
+                        <div className="relative group">
+                            <div className="absolute left-4 top-1/2 -translate-y-1/2 text-gray-500">
+                                <Key size={16} />
+                            </div>
+                            <input
+                                type={isVisible ? "text" : "password"}
+                                value={apiKey}
+                                onChange={(e) => setApiKey(e.target.value)}
+                                placeholder="sk-..."
+                                className="w-full bg-black/40 border border-white/10 rounded-xl py-4 pl-12 pr-12 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all placeholder:text-gray-700 font-mono"
+                            />
+                            <button
+                                onClick={() => setIsVisible(!isVisible)}
+                                className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-500 hover:text-white transition-colors"
+                            >
+                                {isVisible ? <EyeOff size={16} /> : <Eye size={16} />}
+                            </button>
+                        </div>
+                        <p className="text-[10px] text-gray-600 font-medium ml-1">
+                            Key is stored in <span className="text-gray-500">localStorage</span> only.
+                        </p>
+                    </div>
+                </div>
+            </div>
+
+            {/* Other Settings (Legacy/Visual) */}
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-8 opacity-60 pointer-events-none filter grayscale">
                 {sections.map((section) => (
-                    <div key={section.title} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/20 hover:bg-black/40 transition-all group shadow-2xl">
-                        <div className="flex items-start justify-between mb-8">
+                    <div key={section.title} className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/20">
+                        <div className="flex items-start justify-between mb-6">
                             <div className="flex items-center gap-4">
-                                <div className="p-3 rounded-xl bg-purple-500/5 border border-purple-500/10 group-hover:scale-110 transition-transform duration-500">
-                                    <section.icon size={20} className="text-purple-400" />
+                                <div className="p-3 rounded-xl bg-white/5 border border-white/10">
+                                    <section.icon size={20} className="text-gray-500" />
                                 </div>
                                 <div>
-                                    <h3 className="text-sm font-black text-white uppercase tracking-tight">{section.title}</h3>
-                                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter mt-1">{section.desc}</p>
+                                    <h3 className="text-sm font-black text-gray-400 uppercase tracking-tight">{section.title}</h3>
+                                    <p className="text-[10px] text-gray-600 font-bold uppercase tracking-tighter mt-1">{section.desc}</p>
                                 </div>
                             </div>
                         </div>
-
                         <div className="space-y-4">
                             {section.settings.map((s) => (
-                                <div key={s.name} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5 group/row hover:border-purple-500/20 transition-all">
-                                    <span className="text-[11px] font-bold text-gray-400 group-hover/row:text-gray-200 transition-colors uppercase tracking-tight">{s.name}</span>
-                                    <div className="flex items-center gap-2">
-                                        <span className="text-[10px] font-black text-purple-400 bg-purple-500/10 px-2.5 py-1 rounded-lg border border-purple-500/10 uppercase tracking-widest">{s.value}</span>
-                                        <ChevronRight size={12} className="text-gray-700 group-hover/row:text-purple-500 transition-colors" />
-                                    </div>
+                                <div key={s.name} className="flex items-center justify-between p-4 rounded-xl bg-white/[0.02] border border-white/5">
+                                    <span className="text-[11px] font-bold text-gray-500 uppercase tracking-tight">{s.name}</span>
+                                    <span className="text-[10px] font-black text-gray-500 bg-white/5 px-2.5 py-1 rounded-lg border border-white/5 uppercase tracking-widest">{s.value}</span>
                                 </div>
                             ))}
                         </div>
                     </div>
                 ))}
-            </div>
-
-            {/* Footer Action */}
-            <div className="glass-panel p-8 rounded-3xl border-purple-500/10 bg-purple-600/[0.02] flex items-center justify-between">
-                <div className="space-y-1">
-                    <h4 className="text-sm font-black text-white uppercase italic">Factory Reset Registry</h4>
-                    <p className="text-[10px] text-gray-500 font-bold uppercase tracking-tighter">Wipe all datasets, models, and session logs</p>
-                </div>
-                <button className="px-8 py-3 rounded-xl bg-rose-600/10 text-rose-500 border border-rose-500/20 font-black text-[10px] uppercase tracking-widest hover:bg-rose-600 hover:text-white transition-all active:scale-95 shadow-2xl">
-                    Purge System
-                </button>
             </div>
         </div>
     );

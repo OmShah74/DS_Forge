@@ -15,6 +15,9 @@ import {
     LineChart, Line, AreaChart, Area,
     RadarChart, PolarGrid, PolarAngleAxis, PolarRadiusAxis, Radar, Legend
 } from 'recharts';
+import { useConfigStore } from "@/store/configStore";
+import { Brain, Sparkles, AlertTriangle } from "lucide-react";
+import ReactMarkdown from 'react-markdown';
 
 export default function EvaluationPage() {
     const { addToast } = useNotificationStore();
@@ -313,6 +316,9 @@ export default function EvaluationPage() {
                             </div>
                         )}
 
+                        {/* AI Analyst Section */}
+                        <AIAnalystPanel run={selectedRun} />
+
                         {/* Diagnostic Visuals */}
                         <div className="grid grid-cols-1 lg:grid-cols-2 gap-8">
 
@@ -383,5 +389,109 @@ export default function EvaluationPage() {
                 <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/[0.01] blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
         </main>
+    );
+}
+
+function AIAnalystPanel({ run }: { run: any }) {
+    const { apiKey, llmProvider, modelName } = useConfigStore();
+    const [analysis, setAnalysis] = useState<string | null>(null);
+    const [loading, setLoading] = useState(false);
+    const [error, setError] = useState<string | null>(null);
+
+    const handleAnalyze = async () => {
+        if (!apiKey) {
+            setError("API Key missing. Please configure in Settings.");
+            return;
+        }
+        setLoading(true);
+        setError(null);
+        try {
+            const res = await api.post("/llm/evaluate", {
+                provider: llmProvider,
+                api_key: apiKey,
+                model: modelName,
+                context: run
+            });
+            setAnalysis(res.data.analysis);
+        } catch (err: any) {
+            setError(err.response?.data?.detail || "LLM Analysis Failed");
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    return (
+        <div className="glass-panel p-8 rounded-[2rem] border-purple-500/20 bg-gradient-to-br from-purple-900/10 to-black/40 shadow-2xl relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-64 h-64 bg-purple-600/10 blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+
+            <div className="relative z-10">
+                <div className="flex items-center justify-between mb-6">
+                    <div className="flex items-center gap-4">
+                        <div className="p-3 rounded-xl bg-purple-500/10 border border-purple-500/20 shadow-[0_0_15px_rgba(168,85,247,0.2)]">
+                            <Brain size={24} className="text-purple-400" />
+                        </div>
+                        <div>
+                            <h3 className="text-lg font-black text-white uppercase tracking-tight flex items-center gap-2">
+                                AI Analyst Insight
+                                {loading && <span className="flex h-2 w-2 relative"><span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-purple-400 opacity-75"></span><span className="relative inline-flex rounded-full h-2 w-2 bg-purple-500"></span></span>}
+                            </h3>
+                            <p className="text-xs text-gray-400 font-bold uppercase tracking-widest mt-1">
+                                Powered by {llmProvider.toUpperCase()} / {modelName}
+                            </p>
+                        </div>
+                    </div>
+
+                    {!analysis && !loading && (
+                        <button
+                            onClick={handleAnalyze}
+                            className="px-6 py-3 rounded-xl bg-white text-black font-black text-[10px] uppercase tracking-widest hover:scale-105 transition-transform shadow-lg flex items-center gap-2"
+                        >
+                            <Sparkles size={14} className="text-purple-600" /> Generate Report
+                        </button>
+                    )}
+                </div>
+
+                {error && (
+                    <div className="p-4 rounded-xl bg-rose-500/10 border border-rose-500/20 flex items-center gap-3 text-rose-400 mb-4 animate-in fade-in slide-in-from-top-2">
+                        <AlertTriangle size={18} />
+                        <span className="text-xs font-bold">{error}</span>
+                    </div>
+                )}
+
+                {analysis ? (
+                    <div className="prose prose-invert prose-sm max-w-none text-gray-300 animate-in fade-in duration-700">
+                        <ReactMarkdown
+                            components={{
+                                strong: ({ node, ...props }) => <span className="text-white font-black" {...props} />,
+                                h1: ({ node, ...props }) => <h3 className="text-lg font-black text-purple-300 uppercase mt-4 mb-2" {...props} />,
+                                h2: ({ node, ...props }) => <h4 className="text-sm font-bold text-gray-200 uppercase mt-4 mb-2 tracking-wide" {...props} />,
+                                h3: ({ node, ...props }) => <h5 className="text-xs font-bold text-gray-400 uppercase mt-3 mb-1 tracking-widest" {...props} />,
+                            }}
+                        >
+                            {analysis}
+                        </ReactMarkdown>
+                        <div className="mt-6 flex justify-end">
+                            <button onClick={() => setAnalysis(null)} className="text-[10px] font-bold text-gray-600 hover:text-white uppercase tracking-widest transition-colors">
+                                Reset Analysis
+                            </button>
+                        </div>
+                    </div>
+                ) : (
+                    !loading && (
+                        <div className="h-24 flex items-center justify-center border border-dashed border-white/10 rounded-xl bg-black/20 text-gray-600 text-xs font-medium uppercase tracking-widest">
+                            Ready to analyze training telemetry
+                        </div>
+                    )
+                )}
+
+                {loading && (
+                    <div className="space-y-3 animate-pulse">
+                        <div className="h-4 bg-white/5 rounded w-3/4"></div>
+                        <div className="h-4 bg-white/5 rounded w-1/2"></div>
+                        <div className="h-4 bg-white/5 rounded w-5/6"></div>
+                    </div>
+                )}
+            </div>
+        </div>
     );
 }

@@ -1,6 +1,7 @@
 # --- Core Framework ---
 fastapi
 uvicorn
+requests
 pydantic
 pydantic-settings
 python-multipart
