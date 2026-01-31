@@ -33,8 +33,9 @@ app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", ta
 app.include_router(deployment.router, prefix=f"{settings.API_V1_STR}/deployment", tags=["deployment"])
 app.include_router(features.router, prefix=f"{settings.API_V1_STR}/features", tags=["features"])
 # Register LLM Router
-from app.api import llm
+from app.api import llm, system
 app.include_router(llm.router, prefix=f"{settings.API_V1_STR}/llm", tags=["llm"])
+app.include_router(system.router, prefix=f"{settings.API_V1_STR}/system", tags=["system"])
 
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():
