@@ -60,12 +60,12 @@ graph TD
     Step5 -->|Validated Model| Step6[6. Deployment]
     Step6 -->|API Endpoint| Step7[7. Monitoring]
     
-    Subgraph Backend
+    subgraph Backend
     B[FastAPI Engine]
     DB[(SQLite Storage)]
     end
     
-    Subgraph Frontend
+    subgraph Frontend
     UI[Next.js Dashboard]
     Store[Zustand State]
     end
