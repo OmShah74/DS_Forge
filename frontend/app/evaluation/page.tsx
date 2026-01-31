@@ -275,7 +275,7 @@ export default function EvaluationPage() {
                                 <div key={k} className="glass-panel p-8 rounded-2xl border-white/5 bg-black/60 relative overflow-hidden group hover:border-purple-500/30 transition-all">
                                     <h3 className="text-xs font-bold text-gray-500 uppercase tracking-widest mb-4 group-hover:text-purple-400 transition-colors">{k.replace(/_/g, ' ')}</h3>
                                     <p className="text-4xl font-mono font-bold text-white tracking-tighter">{typeof v === 'number' ? v.toFixed(5) : v}</p>
-                                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 blur-3xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
+                                    <div className="absolute top-0 right-0 w-24 h-24 bg-purple-600/5 blur-2xl rounded-full -translate-y-1/2 translate-x-1/2"></div>
                                 </div>
                             ))}
                         </div>
@@ -347,7 +347,7 @@ export default function EvaluationPage() {
                 )}
 
                 {/* Visual decoration */}
-                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/[0.03] blur-[150px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                <div className="absolute top-0 right-0 w-[500px] h-[500px] bg-purple-600/[0.01] blur-[80px] rounded-full -translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
             </div>
         </main>
     );

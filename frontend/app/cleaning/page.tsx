@@ -106,7 +106,7 @@ export default function CleaningPage() {
             <div className="flex-1 flex gap-6 overflow-hidden min-h-0">
                 {/* Left: Source Registry */}
                 <div className="w-80 flex flex-col space-y-6 shrink-0">
-                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl">
+                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-lg">
                         <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
                             <Database size={14} className="text-purple-500" />
                             <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Source Registry</h2>
@@ -135,7 +135,7 @@ export default function CleaningPage() {
                         </div>
                     </div>
 
-                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-2xl bg-black/40">
+                    <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-lg">
                         <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
                             <RefreshCw size={14} className="text-purple-500" />
                             <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Pipeline History</h2>
@@ -162,7 +162,7 @@ export default function CleaningPage() {
                 {/* Right: Workspace */}
                 <div className="flex-1 flex flex-col gap-6 min-h-0 overflow-hidden">
                     {/* Controls - Fixed height with internal scroll */}
-                    <div className="glass-panel rounded-2xl border-white/5 flex flex-col shrink-0 overflow-hidden shadow-2xl">
+                    <div className="glass-panel rounded-2xl border-white/5 flex flex-col shrink-0 overflow-hidden shadow-lg">
                         <div className="p-5 border-b border-white/5 bg-white/[0.01] shrink-0">
                             <div className="flex items-center justify-between gap-6">
                                 <div className="space-y-3 flex-1 max-w-sm">
@@ -218,7 +218,7 @@ export default function CleaningPage() {
                     </div>
 
                     {/* Preview Area - Flexible */}
-                    <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden relative min-h-0 shadow-2xl">
+                    <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden relative min-h-0 shadow-lg">
                         <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                             <div className="flex items-center gap-2">
                                 <Layers size={14} className="text-purple-500" />

@@ -86,20 +86,22 @@ class TrainingEngine:
                 target_classes = []
 
             # Split Data
-            log_event("Performing 80/20 train-test split.")
+            log_event("Performing 80/20 train-test split. 80% of data is used to teach the model, 20% is hidden to test its knowledge later.")
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
 
             # 5. Training
             run.stage = "fitting"
             run.progress = 50
             log_event(f"Fitting model architecture: {model_info['name']}")
+            log_event(f"Algorithm Type: {model_info['type'].upper()} - optimizing for {'accuracy/F1' if model_info['type'] == 'classification' else 'error minimization (RMSE)'}.")
             log_event("Hyperparameters: " + str(run.parameters or "Optimized Defaults"))
+            log_event("Explanation: The model is now iteratively learning the patterns mapping your features (X) to the target (Y).")
             db.commit()
 
             params = run.parameters or {}
             clf = model_info["class"](**params)
             clf.fit(X_train, y_train)
-            log_event("Core weights calculation complete.")
+            log_event("Core weights calculation complete. The mathematical function has been defined.")
 
             # 6. Evaluation
             run.stage = "scoring"

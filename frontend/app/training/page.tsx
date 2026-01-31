@@ -262,12 +262,31 @@ export default function TrainingPage() {
                             </select>
                         </div>
 
+                        {/* Educational / Formula Section */}
+                        {selectedModelKey && (
+                            <div className="p-4 rounded-xl bg-purple-500/5 border border-purple-500/10 space-y-3 animate-in fade-in zoom-in-95 duration-300">
+                                <div className="flex items-center gap-2">
+                                    <BrainCircuit size={14} className="text-purple-400" />
+                                    <span className="text-xs font-bold text-gray-300 uppercase tracking-widest">Algorithm Logic</span>
+                                </div>
+                                <p className="text-xs text-gray-400 leading-relaxed">
+                                    {models.find(m => m.key === selectedModelKey)?.description}
+                                </p>
+                                <div className="p-3 bg-black/40 rounded-lg border border-white/5 font-mono text-[10px] text-purple-300 overflow-x-auto whitespace-nowrap">
+                                    {models.find(m => m.key === selectedModelKey)?.formula}
+                                </div>
+                            </div>
+                        )}
+
                         {/* Hyperparameters Configurator */}
                         {selectedModelKey && models.find(m => m.key === selectedModelKey)?.param_meta && (
                             <div className="space-y-4 pt-4 border-t border-white/5 animate-in fade-in slide-in-from-top-4">
                                 <label className="text-[10px] font-bold text-purple-400 uppercase tracking-[0.2em] px-1 flex items-center gap-2">
-                                    <Settings size={12} /> Tuning Parameters
+                                    <Settings size={12} /> Tuning Parameters (Optimized Defaults Active)
                                 </label>
+                                <p className="text-[9px] text-gray-500 italic px-1">
+                                    Expert-selected hyperparameters for this algorithm. Adjust only if necessary.
+                                </p>
                                 <div className="space-y-4">
                                     {Object.entries(models.find(m => m.key === selectedModelKey)!.param_meta).map(([key, meta]: [string, any]) => (
                                         <div key={key} className="space-y-2">
@@ -311,8 +330,8 @@ export default function TrainingPage() {
                         {isSubmitting ? "Syncing..." : <><Play size={14} /> Initiate Training Protocol</>}
                     </button>
 
-                    {/* Visual decoration */}
-                    <div className="absolute top-0 left-0 w-32 h-32 bg-purple-600/[0.02] blur-[60px] rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
+                    {/* Visual decoration - OPTIMIZED */}
+                    <div className="absolute top-0 left-0 w-32 h-32 bg-purple-600/[0.01] blur-[40px] rounded-full -translate-y-1/2 -translate-x-1/2 pointer-events-none"></div>
                 </div>
 
                 {/* RIGHT: Experiment Tracking Board */}
@@ -439,8 +458,8 @@ export default function TrainingPage() {
                         )}
                     </div>
 
-                    {/* Visual decoration */}
-                    <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-600/[0.01] blur-[100px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
+                    {/* Visual decoration - OPTIMIZED */}
+                    <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-600/[0.005] blur-[60px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 </div>
             </div>
         </main>

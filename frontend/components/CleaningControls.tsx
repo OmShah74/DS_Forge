@@ -168,10 +168,10 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                                     <div className="flex-[2] relative group">
                                         <input
                                             type="text"
-                                            value={params['mapper']?.[col] ?? col}
+                                            value={params['mapping']?.[col] ?? col}
                                             onChange={(e) => {
-                                                const currentMapper = params['mapper'] || {};
-                                                updateParam('mapper', { ...currentMapper, [col]: e.target.value });
+                                                const currentMapping = params['mapping'] || {};
+                                                updateParam('mapping', { ...currentMapping, [col]: e.target.value });
                                             }}
                                             className="w-full bg-white/[0.03] border border-white/5 rounded-lg px-3 py-2 text-xs text-white focus:ring-2 focus:ring-purple-500/30 outline-none placeholder:text-gray-800 font-mono transition-all"
                                             placeholder="Enter new name..."
@@ -197,7 +197,7 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                 {operation === "convert_type" && (
                     <>
                         {renderMultiSelect("Target Columns", "columns")}
-                        {renderDropdown("Target Format", "dtype", [
+                        {renderDropdown("Target Format", "type", [
                             { value: "int64", label: "Integer (Discrete Numbers)" },
                             { value: "float64", label: "Float (Decimal Numbers)" },
                             { value: "string", label: "String (Text Labels)" },
@@ -215,7 +215,7 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
 
                 {operation === "text_clean" && (
                     <>
-                        {renderDropdown("Sanitization Strategy", "case_type", [
+                        {renderDropdown("Sanitization Strategy", "action", [
                             { value: "lower", label: "Force Lowercase" },
                             { value: "upper", label: "Force Uppercase" }
                         ])}

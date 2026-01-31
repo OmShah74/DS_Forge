@@ -29,3 +29,6 @@ passlib[bcrypt]
 
 # --- Monitoring & System ---
 psutil
+
+# --- Advanced Models ---
+xgboost
