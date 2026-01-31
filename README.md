@@ -1,136 +1,177 @@
 # DS-FORGE: The Data Science Operating System
 
-DS-Forge is a premium, local-first **Data Science Operating System** designed to streamline the end-to-end ML lifecycle. It unifies data ingestion, cleaning, training, evaluation, AI analysis, and deployment into a single, cohesive, "Glassmorphic" interface.
+![Status](https://img.shields.io/badge/Status-Beta-blue)
+![Stack](https://img.shields.io/badge/Stack-Next.js_|_FastAPI_|_Docker-black)
+![License](https://img.shields.io/badge/License-MIT-green)
 
-Built for privacy and performance, DS-Forge runs completely locally via Docker, ensuring your sensitive data never leaves your machine unless you explicitly configure the AI Analyst.
+<div align="center">
+  <img src="https://via.placeholder.com/1200x600.png?text=DS-Forge+Dashboard+Preview" width="100%" />
+  <p><em>Fig 1: DS-Forge Control Center</em></p>
+</div>
 
-![DS-Forge Dashboard](https://via.placeholder.com/800x400.png?text=DS-Forge+Dashboard+Preview)
+DS-Forge is a premium, self-contained **Data Science Operating System** that unifies the entire Machine Learning lifecycle into a single, cohesive interface. It allows users to perform end-to-end analytics—from raw data ingestion to production deployment—without writing a single line of boilerplate code.
 
----
+Designed for privacy and performance, the entire pipeline runs locally on your CPU using optimized Docker containers, ensuring zero-cost compute and complete data sovereignty.
 
-## 🚀 Key Features
+## Table of Contents
 
-### 1. 📂 Data Ingestion
-- **Universal Import**: Drag-and-drop support for CSV, Excel (XLSX), and JSON files.
-- **Smart Parsing**: Automatically detects delimiters and headers.
-- **Persistence**: Datasets are stored securely in the local `storage/datasets` volume.
+- [Features](#features)
+- [Pipeline Architecture](#pipeline-architecture)
+- [Tech Stack](#tech-stack)
+- [Getting Started](#getting-started)
+  - [Prerequisites](#prerequisites)
+  - [Installation](#installation)
+- [Usage Guide](#usage-guide)
+  - [1. Data Ingestion](#1-data-ingestion)
+  - [2. Cleaning Engine](#2-cleaning-engine)
+  - [3. Feature Engineering](#3-feature-engineering)
+  - [4. Model Training](#4-model-training)
+  - [5. Evaluation & AI Analytics](#5-evaluation--ai-analytics)
+  - [6. Deployment](#6-deployment)
+  - [7. Monitoring](#7-monitoring)
+- [Roadmap](#roadmap)
+- [License](#license)
 
-### 2. 🧼 Cleaning Engine (3-Column UI)
-A professional workspace for data wrangling:
-- **Registry (Left)**: Select and preview raw datasets.
-- **Control Console (Center)**: Apply transformation operations:
-    - *Rename Columns*
-    - *Handle Missing Values (Mean/Median/Mode)*
-    - *Drop Duplicates/Columns*
-    - *Normalize/Scale Data*
-- **Stream Analysis (Right)**: Real-time preview of your data transformation pipeline.
+## Features
 
-### 3. 🧠 Model Training
-- **Algorithm Suite**: Logistic Regression, Random Forest, XGBoost, SVM, AdaBoost, Gradient Boosting.
-- **Hyperparameter Tuning**: Fully customizable parameters (Learning Rate, n_estimators, etc.) with tooltip formulas.
-- **Auto-Encoding**: Automatically detects categorical columns and saves LabelEncoders for robust inference.
+### 🚀 Entire Pipeline Orchestration
+- **Self-Contained OS**: A complete environment that supersedes disparate tools (Jupyter, Excel, MLOps platforms).
+- **Glassmorphic UI**: A premium, responsive interface tailored for deep work and visualization.
+- **CPU-First Design**: Optimized algorithms (Scikit-learn, XGBoost) specifically tuned to run efficiently on standard CPUs without requiring GPUs.
 
-### 4. 📊 Evaluation & AI Analyst
-- **Deep Metrics**: Precision, Recall, F1-Score (Weighted/Macro), MCC, ROC-AUC, MAE, RMSE.
-- **Visual Diagnostics**:
-    - **Radar Charts**: Compare model "shape" across metrics.
-    - **Residual Plots**: Analyze regression error distribution.
-    - **Feature Importance**: Identify key drivers of prediction.
-- **AI Analyst**: (New) Integrated LLM agent.
-    - Configure your own API Key (OpenAI, Groq, Gemini) in **Settings**.
-    - Generates qualitative reports ("Good/Bad/Overfitting") and suggests improvements.
-    - **Privacy**: Keys stored locally in browser; requests are stateless proxy.
+### 🧠 AI Analyst Integration
+- **Qualitative Insights**: Uses LLMs (OpenAI, Groq, Gemini) to analyze training runs and provide "Good/Bad/Overfitting" verdicts.
+- **Stateless Privacy**: API keys are stored locally in your browser. The backend acts as a blind proxy, ensuring your credentials and data privacy.
 
-### 5. 🚀 Production Deployment
-- **Real Inference**: Deploys trained models to a REST API.
-- **Robust Pipeline**: Loads saved encoders to handle raw string inputs (business data) automatically.
-- **Test Interface**: Built-in JSON tester to verify model API responses.
+### 🛡️ Robust System Management
+- **Factory Reset**: A "Danger Zone" feature to purge the entire database and storage for a clean start.
+- **Auto-Persist**: All datasets, models, and artifacts are automatically saved to local Docker volumes.
 
-### 6. ⚙️ System Management
-- **Factory Reset**: "Danger Zone" purge functionality to wipe the database and storage for a fresh start.
+## Pipeline Architecture
 
----
+DS-Forge divides the Data Science lifecycle into seven distinct, interconnected stages:
 
-## 🏗️ Architecture
-
-DS-Forge follows a modern, containerized microservices architecture:
-
-### **Frontend (Port 3000)**
-- **Framework**: Next.js 14 (React 18)
-- **Styling**: Tailwind CSS + Framer Motion (Glassmorphism Design System)
-- **State Management**: Zustand (Persisted Config Store)
-- **Visualization**: Recharts
-
-### **Backend (Port 8000)**
-- **Framework**: FastAPI (Python 3.10)
-- **Database**: SQLite (Local file-based persistence)
-- **ML Engine**: Scikit-Learn, XGBoost, Pandas, Numpy, Joblib
-- **API**: RESTful endpoints with Pydantic validation
-
-### **Infrastructure**
-- **Docker**: Containerized environment for consistent execution.
-- **Volumes**:
-    - `backend/app/storage`: Persists models and datasets on host.
-    - `backend/app/db`: Persists SQLite database.
-
----
-
-## 🛠️ Setup & Installation
-
-### Prerequisites
-- Docker Desktop installed & running.
-- (Optional) OpenAI/Groq API Key for AI features.
-
-### Quick Start
-1. **Clone the Repository**
-   ```bash
-   git clone https://github.com/OmShah74/DS_Forge.git
-   cd ds-forge
-   ```
-
-2. **Launch System**
-   ```bash
-   docker-compose up --build
-   ```
-   *Note: First run may take a few minutes to build the Python environment.*
-
-3. **Access OS**
-   - **Dashboard**: [http://localhost:3000](http://localhost:3000)
-   - **API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
-
----
-
-## 📖 Deployment Guide
-
-### Making Predictions
-Once a model is trained and "Deployed":
-
-**Endpoint**: `POST /api/v1/deployment/predict`
-
-**Payload**:
-```json
-{
-  "run_id": 1,
-  "input_data": [
-    {
-      "SepalLengthCm": 5.1,
-      "Species": "Iris-setosa" // Encoders handle strings automatically!
-    }
-  ]
-}
+```mermaid
+graph TD
+    Step1[1. Ingestion] -->|Raw Data| Step2[2. Cleaning]
+    Step2 -->|Cleaned Data| Step3[3. Feature Eng]
+    Step3 -->|Vectorized Data| Step4[4. Training]
+    Step4 -->|Model Artifact| Step5[5. Evaluation]
+    Step5 -->|Validated Model| Step6[6. Deployment]
+    Step6 -->|API Endpoint| Step7[7. Monitoring]
+    
+    Subgraph Backend
+    B[FastAPI Engine]
+    DB[(SQLite Storage)]
+    end
+    
+    Subgraph Frontend
+    UI[Next.js Dashboard]
+    Store[Zustand State]
+    end
 ```
 
+## Tech Stack
+
+| Component | Technology | Description |
+|-----------|------------|-------------|
+| **Frontend** | Next.js 16 | React framework with Server Actions |
+| **Styling** | Tailwind CSS | Utility-first styling with Glassmorphism effects |
+| **State** | Zustand | Global state management with local persistence |
+| **Backend** | FastAPI | High-performance Python 3.10 REST API |
+| **ML Engine** | Scikit-Learn | CPU-optimized classical machine learning |
+| **Advanced ML** | XGBoost | Gradient boosting framework |
+| **Database** | SQLite | Serverless, file-based relational database |
+| **Container** | Docker | Full isolation and reproducibility |
+
+## Getting Started
+
+### Prerequisites
+
+- **Docker Desktop**: The only system requirement.
+- **2GB RAM**: Minimum allocation for the containers.
+
+### Installation
+
+#### 1. Clone the Repository
+```bash
+git clone https://github.com/OmShah74/DS_Forge.git
+cd ds-forge
+```
+
+#### 2. Launch the OS
+Run the orchestration command to build the containers:
+```bash
+docker-compose up --build
+```
+*Note: The first build involves compiling the Python environment and may take a few moments.*
+
+#### 3. Access the System
+- **Dashboard**: [http://localhost:3000](http://localhost:3000)
+- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
+
+## Usage Guide
+
+### 1. Data Ingestion
+*Objective: Load and standardize raw input.*
+- **File Support**: Drag and drop `.csv`, `.json`, or `.xlsx` files.
+- **Raw Input**: Paste raw text data directly into the parser.
+- **Validation**: System automatically creates a standardized schema and saves the dataset to the `storage/datasets` volume.
+
+### 2. Cleaning Engine
+*Objective: Sanitize and preprocess data.*
+- **Control Console**: Access 25+ atomic cleaning operations.
+    - *Missing Values*: Impute (Mean, Median, Mode) or Drop.
+    - *Outliers*: Detect and clamp/remove.
+    - *Columns*: Rename, Drop, or Retype.
+- **Stream Visualization**: See real-time "Before/After" snapshots of your data as you apply operations.
+- **Download**: Export the cleaned dataset at any stage.
+
+### 3. Feature Engineering
+*Objective: Transform data for Machine Learning.*
+- **Encoding**: Automatically detects categorical columns and applies Label/One-Hot encoding.
+- **Scaling**: Normalize (MinMax) or Standardize (Z-Score) numerical features.
+- **Preparation**: Splits data into Training and Validation sets ensuring no leakage.
+
+### 4. Model Training
+*Objective: Generate predictive artifacts.*
+- **Model Zoo**: Select from a curated library of algorithms:
+    - *Regression*: Linear Regression, Random Forest, SVR, Gradient Boosting.
+    - *Classification*: Logistic Regression, SVM, Decision Trees, AdaBoost.
+- **Hyperparameters**: Fine-tune Learning Rate, Estimators, and Depth with built-in formula references.
+- **Execution**: Runs entirely on the CPU, utilizing multi-core processing for speed.
+
+### 5. Evaluation & AI Analytics
+*Objective: Validate and audit performance.*
+- **Metrics Grid**: Precision, Recall, F1-Score, ROC-AUC, MAE, MSE, RMSE.
+- **Visuals**: Radar Charts for metric balance and Residual Plots for error distribution.
+- **AI Analyst**: Click "Generate Report" to send metrics to an LLM (GPT-4/Llama-3). It reads the results and generates a qualitative report suggesting specific improvements (e.g., "High variance detected, try increasing regularization").
+
+### 6. Deployment
+*Objective: Expose model as a service.*
+- **One-Click Deploy**: Move a successfully trained model to the `production` slot.
+- **REST API**: Auto-generates a `/predict` endpoint for the model.
+- **Auto-Encoding**: The inference engine remembers the encodings from Step 3, allowing you to send raw string data (e.g., "Red", "Large") which it automatically converts to numbers for the model.
+
+### 7. Monitoring
+*Objective: Track real-world usage.*
+- **Live Inference Tester**: A built-in JSON playground to test the API in real-time.
+- **Health Checks**: System monitors API latency and error rates.
+- *(Version 2 Feature)*: Advanced Grafana dashboards and drift detection are planned for the next release.
+
+## Roadmap
+
+**Version 2.0 (Agentic Era)** will introduce:
+- **Agflow Integration**: Orchestrate complex AI agents using visual nodes.
+- **Auto-Cleaning Agent**: LLM that plans and executes the entire cleaning pipeline automatically.
+- **RAG for Recommendations**: Vector-based search to recommend the best model for your specific dataset.
+- **Advanced Monitoring**: LangSmith/Grafana integration for full observability.
+
+## License
+
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+
 ---
 
-## ⚠️ Troubleshooting
-
-**"Network Error"**
-- The backend container is restarting. Wait 30s and refresh.
-
-**"Module Not Found"** (React Markdown)
-- Run `docker-compose down -v` followed by `docker-compose up --build` to refresh dependencies.
-
----
-
-**Developed for Advanced Agentic Coding by Google Deepmind.**
-*Om Shah (User) | Antigravity (Agent)*
+**Built with ❤️ by Om Shah**
+*Data Science Mega Project - Production Edition*
