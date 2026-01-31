@@ -17,6 +17,7 @@ export default function FeatureEngineeringPage() {
     const [selectedId, setSelectedId] = useState<number | null>(null);
     const [preview, setPreview] = useState<any>(null);
     const [columns, setColumns] = useState<string[]>([]);
+    const [previewLimit, setPreviewLimit] = useState(100);
 
     // Wizard State
     const [operation, setOperation] = useState("standard_scaler");
@@ -35,10 +36,10 @@ export default function FeatureEngineeringPage() {
 
     useEffect(() => {
         if (selectedId) loadPreview(selectedId);
-    }, [selectedId]);
+    }, [selectedId, previewLimit]);
 
     const loadPreview = async (id: number) => {
-        const res = await api.get(`/datasets/${id}/preview?limit=10`);
+        const res = await api.get(`/datasets/${id}/preview?limit=${previewLimit}`);
         setPreview(res.data);
         setColumns(res.data.columns);
         setSelectedCols([]);
@@ -230,12 +231,35 @@ export default function FeatureEngineeringPage() {
             {/* RIGHT: Data Grid */}
             <div className="flex-1 glass-panel p-2 rounded-[2.5rem] overflow-hidden flex flex-col border-white/5 shadow-2xl relative bg-black/40">
                 {preview ? (
-                    <div className="flex-1 animate-in fade-in duration-1000">
-                        <DataGrid
-                            columns={preview.columns}
-                            data={preview.data}
-                            datasetId={selectedId!}
-                        />
+                    <div className="flex-1 flex flex-col animate-in fade-in duration-1000 overflow-hidden">
+                        <div className="flex items-center justify-between px-6 py-4 shrink-0 border-b border-white/5">
+                            <div className="flex items-center gap-2">
+                                <TableIcon size={14} className="text-purple-500" />
+                                <h3 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Stream Analysis</h3>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <select
+                                    value={previewLimit}
+                                    onChange={(e) => setPreviewLimit(Number(e.target.value))}
+                                    className="bg-black/40 border border-white/10 rounded-lg py-1.5 px-3 text-[10px] font-bold text-gray-400 outline-none focus:ring-1 focus:ring-purple-500/50 cursor-pointer uppercase tracking-wider"
+                                >
+                                    <option value={50}>50 Rows</option>
+                                    <option value={100}>100 Rows</option>
+                                    <option value={500}>500 Rows</option>
+                                    <option value={1000000}>Show All</option>
+                                </select>
+                                <span className="text-[10px] font-bold text-gray-600 bg-white/5 px-2 py-1 rounded border border-white/5">
+                                    {preview.total_rows} Records
+                                </span>
+                            </div>
+                        </div>
+                        <div className="flex-1 overflow-hidden p-2">
+                            <DataGrid
+                                columns={preview.columns}
+                                data={preview.data}
+                                datasetId={selectedId!}
+                            />
+                        </div>
                     </div>
                 ) : (
                     <div className="h-full flex flex-col items-center justify-center text-gray-700 opacity-20">
