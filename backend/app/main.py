@@ -5,7 +5,7 @@ from app.db.base import Base
 from app.db.session import engine
 
 # Import Routers
-from app.api import datasets, cleaning, models, training, deployment, features
+from app.api import datasets, cleaning, models, training, deployment, features, activities
 
 # Create Tables
 Base.metadata.create_all(bind=engine)
@@ -32,6 +32,7 @@ app.include_router(models.router, prefix=f"{settings.API_V1_STR}/models", tags=[
 app.include_router(training.router, prefix=f"{settings.API_V1_STR}/training", tags=["training"])
 app.include_router(deployment.router, prefix=f"{settings.API_V1_STR}/deployment", tags=["deployment"])
 app.include_router(features.router, prefix=f"{settings.API_V1_STR}/features", tags=["features"])
+app.include_router(activities.router, prefix=f"{settings.API_V1_STR}/activities", tags=["activities"])
 # Register LLM Router
 from app.api import llm, system
 app.include_router(llm.router, prefix=f"{settings.API_V1_STR}/llm", tags=["llm"])
