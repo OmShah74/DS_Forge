@@ -26,3 +26,14 @@ class ActivityResponse(BaseModel):
 def list_activities(db: Session = Depends(get_db)):
     """Fetch all system activities ordered by time"""
     return db.query(SystemActivity).order_by(SystemActivity.created_at.desc()).limit(50).all()
+
+@router.delete("/")
+def clear_activities(db: Session = Depends(get_db)):
+    """Clear all system activities"""
+    try:
+        db.query(SystemActivity).delete()
+        db.commit()
+        return {"status": "success", "message": "All activities cleared"}
+    except Exception as e:
+        db.rollback()
+        raise e

@@ -21,6 +21,11 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
         onParamsChange(params);
     }, [params, onParamsChange]);
 
+    // Reset params when operation changes to prevent stale state
+    useEffect(() => {
+        setParams({});
+    }, [operation]);
+
     const updateParam = (key: string, value: any) => {
         setParams((prev: any) => ({ ...prev, [key]: value }));
     };
@@ -95,6 +100,8 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
         remove_outliers_zscore: "Eliminates rows with values that are statistically too far from the average.",
         remove_outliers_iqr: "Uses the 25th/75th percentiles to surgically remove anomalies from your dataset.",
         text_clean: "Standardizes strings by fixing casing or removing messy extra spaces.",
+        find_replace: "Locate specific values or patterns (Regex) and replace them. Useful for typo correction or masking.",
+        winsorize: "Caps extreme values at specified percentiles instead of removing them, preserving data volume.",
     };
 
     return (
@@ -228,6 +235,68 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                         {renderMultiSelect("Identity Verification Columns (Subset)", "subset")}
                         <p className="mt-4 text-[9px] text-gray-600 italic px-2">Leave empty to check complete row equality.</p>
                     </div>
+                )}
+
+                {operation === "find_replace" && (
+                    <>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Find Value</label>
+                            <input
+                                type="text"
+                                value={params['find'] ?? ""}
+                                onChange={(e) => updateParam('find', e.target.value)}
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none font-mono"
+                                placeholder="Value to find..."
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Replace With</label>
+                            <input
+                                type="text"
+                                value={params['replace'] ?? ""}
+                                onChange={(e) => updateParam('replace', e.target.value)}
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none font-mono"
+                                placeholder="New value..."
+                            />
+                        </div>
+                        <div className="md:col-span-2 flex items-center gap-2 px-2 mt-2">
+                            <input
+                                type="checkbox"
+                                id="regex"
+                                checked={params['regex'] || false}
+                                onChange={(e) => updateParam('regex', e.target.checked)}
+                                className="w-4 h-4 rounded bg-white/10 border-white/20 text-purple-600 focus:ring-purple-500"
+                            />
+                            <label htmlFor="regex" className="text-xs font-bold text-gray-400">Use Regular Expressions (Regex)</label>
+                        </div>
+                        <div className="md:col-span-2">
+                            {renderMultiSelect("Target Columns", "subset")}
+                        </div>
+                    </>
+                )}
+
+                {operation === "winsorize" && (
+                    <>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Capping Limits (0.01 - 0.5)</label>
+                            <input
+                                type="number"
+                                step="0.01"
+                                min="0"
+                                max="0.5"
+                                value={params['limits']?.[0] ?? 0.05}
+                                onChange={(e) => {
+                                    const val = parseFloat(e.target.value);
+                                    updateParam('limits', [val, val]);
+                                }}
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none font-mono"
+                            />
+                            <p className="text-[9px] text-gray-600 px-1">Values below bottom X% and above top X% will be capped.</p>
+                        </div>
+                        <div className="md:col-span-2">
+                            {renderMultiSelect("Target Columns", "subset")}
+                        </div>
+                    </>
                 )}
             </div>
         </div>

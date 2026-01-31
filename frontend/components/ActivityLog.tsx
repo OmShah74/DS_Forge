@@ -13,6 +13,7 @@ const operationIcons: Record<string, any> = {
 
 export default function ActivityLog() {
     const { activities, isActivityLogOpen, toggleActivityLog, fetchActivities, loading } = useExplainabilityStore();
+    const clearActivities = useExplainabilityStore((state) => state.clearActivities);
 
     useEffect(() => {
         if (isActivityLogOpen) {
@@ -48,12 +49,22 @@ export default function ActivityLog() {
                                 </h2>
                                 <p className="text-xs text-gray-500 font-medium">Global operation traces</p>
                             </div>
-                            <button
-                                onClick={toggleActivityLog}
-                                className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400"
-                            >
-                                <X size={20} />
-                            </button>
+                            <div className="flex items-center gap-2">
+                                {activities.length > 0 && (
+                                    <button
+                                        onClick={clearActivities}
+                                        className="text-[10px] font-bold uppercase tracking-wider text-rose-400 hover:text-rose-300 hover:bg-rose-500/10 px-3 py-1.5 rounded-lg transition-all"
+                                    >
+                                        Clear All
+                                    </button>
+                                )}
+                                <button
+                                    onClick={toggleActivityLog}
+                                    className="p-2 hover:bg-white/5 rounded-lg transition-colors text-gray-400"
+                                >
+                                    <X size={20} />
+                                </button>
+                            </div>
                         </header>
 
                         <div className="flex-1 overflow-y-auto p-4 space-y-4 custom-scrollbar">
@@ -85,29 +96,29 @@ function ActivityItem({ activity }: { activity: any }) {
     const isSuccess = activity.status === 'success';
 
     return (
-        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group">
-            <div className="flex justify-between items-start mb-2">
-                <div className="flex items-center gap-3">
-                    <div className={`p-2 rounded-lg ${isSuccess ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
+        <div className="p-4 rounded-xl bg-white/[0.02] border border-white/5 hover:border-white/10 transition-all group w-full overflow-hidden">
+            <div className="flex justify-between items-start mb-2 gap-3">
+                <div className="flex items-center gap-3 flex-1 min-w-0">
+                    <div className={`p-2 rounded-lg flex-shrink-0 ${isSuccess ? 'bg-emerald-500/10 text-emerald-500' : 'bg-red-500/10 text-red-500'}`}>
                         {isSuccess ? <CheckCircle2 size={16} /> : <AlertCircle size={16} />}
                     </div>
-                    <div>
+                    <div className="min-w-0 flex-1">
                         <div className="flex items-center gap-2">
-                            <Icon size={12} className="text-purple-500" />
-                            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter">{activity.operation}</span>
+                            <Icon size={12} className="text-purple-500 flex-shrink-0" />
+                            <span className="text-xs font-bold text-gray-400 uppercase tracking-tighter truncate">{activity.operation}</span>
                         </div>
-                        <h4 className="text-sm font-bold text-gray-200 mt-0.5">{activity.message}</h4>
+                        <h4 className="text-sm font-bold text-gray-200 mt-0.5 break-words leading-snug">{activity.message}</h4>
                     </div>
                 </div>
-                <span className="text-[10px] font-mono text-gray-600">{new Date(activity.created_at).toLocaleTimeString()}</span>
+                <span className="text-[10px] font-mono text-gray-600 flex-shrink-0">{new Date(activity.created_at).toLocaleTimeString()}</span>
             </div>
 
             {activity.metadata_json && (
                 <div className="mt-3 bg-black/40 rounded-lg p-3 border border-white/[0.03] space-y-1">
                     {Object.entries(activity.metadata_json).map(([key, value]: [string, any]) => (
-                        <div key={key} className="flex justify-between text-[10px]">
-                            <span className="text-gray-500 font-medium capitalize">{key.replace('_', ' ')}</span>
-                            <span className="text-gray-300 font-bold">{String(value)}</span>
+                        <div key={key} className="flex flex-col sm:flex-row sm:justify-between text-[10px] gap-1">
+                            <span className="text-gray-500 font-medium capitalize flex-shrink-0">{key.replace('_', ' ')}</span>
+                            <span className="text-gray-300 font-bold break-all sm:text-right">{String(value)}</span>
                         </div>
                     ))}
                 </div>

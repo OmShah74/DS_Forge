@@ -50,15 +50,28 @@ export default function CleaningPage() {
         }
     }, [selectedId]);
 
+    const [previewLimit, setPreviewLimit] = useState(50);
+
     const loadPreview = async (id: number) => {
         try {
-            const res = await api.get(`/cleaning/preview/${id}`);
+            const res = await api.get(`/cleaning/preview/${id}?limit=${previewLimit}`);
             setPreview(res.data);
         } catch (e) {
             console.error(e);
         }
     };
 
+    // Reload preview when limit changes
+    useEffect(() => {
+        if (selectedId) loadPreview(selectedId);
+    }, [previewLimit]);
+
+    // ... (rest of component unchanged until JSX)
+
+    // In JSX near Pipeline History Header
+    // ...
+
+    // In JSX near Stream Analysis Header
     const handleApply = async () => {
         if (!selectedId) return;
         setLoading(true);
@@ -137,9 +150,31 @@ export default function CleaningPage() {
                     </div>
 
                     <div className="glass-panel p-5 rounded-2xl flex flex-col h-1/2 border-white/5 overflow-hidden shadow-lg">
-                        <div className="flex items-center gap-2 px-1 mb-4 shrink-0">
-                            <RefreshCw size={14} className="text-purple-500" />
-                            <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Pipeline History</h2>
+                        <div className="flex items-center justify-between px-1 mb-4 shrink-0">
+                            <div className="flex items-center gap-2">
+                                <RefreshCw size={14} className="text-purple-500" />
+                                <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Pipeline History</h2>
+                            </div>
+                            <div className="flex items-center gap-3">
+                                <select
+                                    value={previewLimit}
+                                    onChange={(e) => setPreviewLimit(Number(e.target.value))}
+                                    className="bg-black/40 border border-white/10 rounded-lg py-1 px-2 text-[10px] font-bold text-gray-400 outline-none focus:ring-1 focus:ring-purple-500/50"
+                                >
+                                    <option value={50}>Limit: 50 Rows</option>
+                                    <option value={100}>Limit: 100 Rows</option>
+                                    <option value={500}>Limit: 500 Rows</option>
+                                    <option value={100000}>Show All</option>
+                                </select>
+                                {auditLog.length > 0 && (
+                                    <button
+                                        onClick={() => setAuditLog([])}
+                                        className="text-[10px] font-bold text-rose-500 hover:text-rose-400 uppercase tracking-widest transition-colors"
+                                    >
+                                        Clear
+                                    </button>
+                                )}
+                            </div>
                         </div>
                         <div className="flex-1 overflow-y-auto space-y-3 pr-1 custom-scrollbar">
                             {auditLog.length > 0 ? auditLog.map(log => (
@@ -181,6 +216,10 @@ export default function CleaningPage() {
                                             <option value="rename_columns">Rename Columns (Header Sanitization)</option>
                                             <option value="drop_columns">Drop Features (Columns)</option>
                                             <option value="convert_type">Cast / Convert Type</option>
+                                        </optgroup>
+                                        <optgroup label="Advanced Editing" className="bg-[#04060c]">
+                                            <option value="find_replace">Find & Replace (Targeted Edit)</option>
+                                            <option value="winsorize">Cap Outliers (Winsorize)</option>
                                         </optgroup>
                                         <optgroup label="Quality Control" className="bg-[#04060c]">
                                             <option value="drop_duplicates">Remove Duplicates</option>
@@ -227,11 +266,23 @@ export default function CleaningPage() {
                             <Layers size={14} className="text-purple-500" />
                             <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Stream Analysis</h2>
                         </div>
-                        {preview && (
-                            <span className="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded border border-white/5">
-                                {preview.columns.length} Features • {preview.total_rows} Records
-                            </span>
-                        )}
+                        <div className="flex items-center gap-3">
+                            <select
+                                value={previewLimit}
+                                onChange={(e) => setPreviewLimit(Number(e.target.value))}
+                                className="bg-black/40 border border-white/10 rounded-lg py-1 px-2 text-[10px] font-bold text-gray-400 outline-none focus:ring-1 focus:ring-purple-500/50"
+                            >
+                                <option value={50}>Limit: 50 Rows</option>
+                                <option value={100}>Limit: 100 Rows</option>
+                                <option value={500}>Limit: 500 Rows</option>
+                                <option value={100000}>Show All</option>
+                            </select>
+                            {preview && (
+                                <span className="text-xs font-semibold text-gray-500 bg-white/5 px-2 py-1 rounded border border-white/5">
+                                    {preview.columns.length} Features • {preview.total_rows} Records
+                                </span>
+                            )}
+                        </div>
                     </div>
 
                     <div className="flex-1 min-h-0 bg-black/40 rounded-xl border border-white/5 overflow-hidden flex flex-col">

@@ -17,6 +17,7 @@ export default function DatasetsPage() {
     const [inspectingId, setInspectingId] = useState<number | null>(null);
     const [previewData, setPreviewData] = useState<{ columns: string[], data: any[] } | null>(null);
     const [isFetchingPreview, setIsFetchingPreview] = useState(false);
+    const [previewLimit, setPreviewLimit] = useState(100);
 
     // Resizable State
     const [size, setSize] = useState({ width: 1200, height: 800 });
@@ -59,9 +60,13 @@ export default function DatasetsPage() {
 
     const handleInspect = async (id: number) => {
         setInspectingId(id);
+        fetchPreview(id, previewLimit);
+    };
+
+    const fetchPreview = async (id: number, limit: number) => {
         setIsFetchingPreview(true);
         try {
-            const res = await api.get(`/datasets/${id}/preview`);
+            const res = await api.get(`/datasets/${id}/preview?limit=${limit}`);
             setPreviewData(res.data);
         } catch (error) {
             console.error("Failed to fetch preview", error);
@@ -69,6 +74,14 @@ export default function DatasetsPage() {
             setInspectingId(null);
         } finally {
             setIsFetchingPreview(false);
+        }
+    };
+
+    const handleLimitChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+        const newLimit = parseInt(e.target.value);
+        setPreviewLimit(newLimit);
+        if (inspectingId) {
+            fetchPreview(inspectingId, newLimit);
         }
     };
 
@@ -209,12 +222,33 @@ export default function DatasetsPage() {
                                     <p className="text-xs font-black uppercase tracking-[0.3em]">Synching Data Stream...</p>
                                 </div>
                             ) : previewData ? (
-                                <DataGrid
-                                    columns={previewData.columns}
-                                    data={previewData.data}
-                                    datasetId={inspectingId}
-                                    onClose={() => setInspectingId(null)}
-                                />
+                                <div className="flex flex-col h-full">
+                                    <div className="flex justify-end mb-2">
+                                        <div className="flex items-center gap-2 bg-black/20 p-1.5 rounded-lg border border-white/5">
+                                            <span className="text-[10px] font-bold text-gray-400 uppercase tracking-wider">Rows:</span>
+                                            <select
+                                                value={previewLimit}
+                                                onChange={handleLimitChange}
+                                                className="bg-transparent text-xs font-bold text-emerald-400 focus:outline-none cursor-pointer uppercase"
+                                            >
+                                                <option value={50}>50</option>
+                                                <option value={100}>100</option>
+                                                <option value={200}>200</option>
+                                                <option value={500}>500</option>
+                                                <option value={1000}>1000</option>
+                                                <option value={1000000}>All</option>
+                                            </select>
+                                        </div>
+                                    </div>
+                                    <div className="flex-1 overflow-hidden">
+                                        <DataGrid
+                                            columns={previewData.columns}
+                                            data={previewData.data}
+                                            datasetId={inspectingId}
+                                            onClose={() => setInspectingId(null)}
+                                        />
+                                    </div>
+                                </div>
                             ) : (
                                 <div className="flex-1 flex items-center justify-center text-gray-500 uppercase font-black tracking-widest">
                                     Failed to load preview

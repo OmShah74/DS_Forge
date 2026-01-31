@@ -19,6 +19,7 @@ interface ExplainabilityState {
     loading: boolean;
 
     fetchActivities: () => Promise<void>;
+    clearActivities: () => Promise<void>;
     toggleActivityLog: () => void;
     openHelp: (section: string) => void;
     closeHelp: () => void;
@@ -39,6 +40,15 @@ export const useExplainabilityStore = create<ExplainabilityState>((set) => ({
         } catch (error) {
             console.error("Failed to fetch activities:", error);
             set({ loading: false });
+        }
+    },
+
+    clearActivities: async () => {
+        try {
+            await axios.delete(`${API_URL}/activities`);
+            set({ activities: [] });
+        } catch (error) {
+            console.error("Failed to clear activities:", error);
         }
     },
 
