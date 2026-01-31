@@ -1,27 +1,28 @@
-version: '3.8'
-
 services:
   backend:
     build:
       context: ./backend
       dockerfile: Dockerfile
+    image: omshah74/dsforge-backend:v1.0
     container_name: ds-forge-backend
     ports:
       - "8000:8000"
     volumes:
       - ./backend/app:/app/app
-      # Mount storage so data persists locally on your Windows machine
       - ./backend/app/storage:/app/app/storage
       - ./backend/app/db:/app/app/db
     environment:
       - DATABASE_URL=sqlite:///./app/db/ds-forge.sqlite
       - PROJECT_NAME=DS-Forge
+    # Overriding the Dockerfile CMD for development hot-reloading
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
     restart: always
 
   frontend:
     build:
       context: ./frontend
       dockerfile: Dockerfile
+    image: omshah74/dsforge-frontend:v1.0
     container_name: ds-forge-frontend
     ports:
       - "3000:3000"
@@ -32,7 +33,6 @@ services:
       - ./frontend/store:/app/store
       - ./frontend/constants:/app/constants
       - ./frontend/public:/app/public
-      # Prevent node_modules syncing issues between Windows/Linux
       - /app/node_modules
     environment:
       - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1

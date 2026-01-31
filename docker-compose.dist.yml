@@ -1,0 +1,30 @@
+version: '3.8'
+
+services:
+  backend:
+    image: omshah74/dsforge-backend:v1.0
+    container_name: ds-forge-backend
+    ports:
+      - "8000:8000"
+    volumes:
+      - dsforge_storage:/app/app/storage
+      - dsforge_db:/app/app/db
+    environment:
+      - DATABASE_URL=sqlite:///./app/db/ds-forge.sqlite
+      - PROJECT_NAME=DS-Forge
+    restart: always
+
+  frontend:
+    image: omshah74/dsforge-frontend:v1.0
+    container_name: ds-forge-frontend
+    ports:
+      - "3000:3000"
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on:
+      - backend
+    restart: always
+
+volumes:
+  dsforge_storage:
+  dsforge_db:
