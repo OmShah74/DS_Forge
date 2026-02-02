@@ -24,3 +24,6 @@ backend/app/storage/models/*
 !backend/app/storage/**/.gitkeep
 backend/app/db/ds-forge.sqlite-shm
 backend/app/db/ds-forge.sqlite-wal
+backend/app/db/ds-forge.sqlite
+backend/app/db/ds-forge.sqlite-shm
+backend/app/db/ds-forge.sqlite-wal
