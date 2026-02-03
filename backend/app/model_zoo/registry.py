@@ -1,17 +1,33 @@
-from sklearn.linear_model import LinearRegression, LogisticRegression, Ridge, Lasso
-from sklearn.ensemble import RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, GradientBoostingClassifier, AdaBoostRegressor, AdaBoostClassifier
-from sklearn.svm import SVR, SVC
+from sklearn.linear_model import (
+    LinearRegression, LogisticRegression, Ridge, Lasso, ElasticNet, 
+    SGDClassifier, SGDRegressor, BayesianRidge, HuberRegressor, 
+    PassiveAggressiveClassifier, PassiveAggressiveRegressor, RidgeClassifier
+)
+from sklearn.ensemble import (
+    RandomForestRegressor, RandomForestClassifier, GradientBoostingRegressor, 
+    GradientBoostingClassifier, AdaBoostRegressor, AdaBoostClassifier, 
+    ExtraTreesRegressor, ExtraTreesClassifier, BaggingRegressor, BaggingClassifier,
+    HistGradientBoostingRegressor, HistGradientBoostingClassifier
+)
+from sklearn.svm import SVR, SVC, LinearSVC, NuSVC, LinearSVR, NuSVR
 from sklearn.neighbors import KNeighborsClassifier, KNeighborsRegressor
 from sklearn.tree import DecisionTreeRegressor, DecisionTreeClassifier
+from sklearn.naive_bayes import GaussianNB, MultinomialNB, BernoulliNB, ComplementNB
+from sklearn.neural_network import MLPClassifier, MLPRegressor
+from sklearn.cluster import KMeans, DBSCAN, AgglomerativeClustering, SpectralClustering
+from sklearn.mixture import GaussianMixture
 import xgboost as xgb
 
 class ModelRegistry:
     """
     Central repository of available algorithms with detailed metadata and optimized default parameters.
+    Updated with 20+ advanced models across Regression, Classification, and Clustering.
     """
     
     MODELS = {
-        # --- REGRESSION ---
+        # ==========================================
+        #              REGRESSION
+        # ==========================================
         "linear_regression": {
             "name": "Linear Regression",
             "type": "regression",
@@ -26,13 +42,10 @@ class ModelRegistry:
             "type": "regression",
             "class": Ridge,
             "params": {"alpha": 1.0},
-            "description": "Linear regression with L2 regularization. It minimizes the squared magnitude of coefficients to prevent overfitting, making it suitable for data with multicollinearity.",
+            "description": "Linear regression with L2 regularization. Minimizes squared coefficients to prevent overfitting.",
             "formula": "Loss = RSS + α * ||β||²",
             "param_meta": {
-                "alpha": {
-                    "type": "number", "min": 0.01, "max": 10.0, "step": 0.1, "label": "Regularization Strength (Alpha)",
-                    "help": "Controls how much we penalize large coefficients. Higher values result in simpler models (less overfitting) but may cause underfitting."
-                }
+                "alpha": {"type": "number", "min": 0.01, "max": 10.0, "step": 0.1, "label": "Alpha", "help": "Regularization strength. Larger values specify stronger regularization."}
             }
         },
         "lasso_regression": {
@@ -40,13 +53,56 @@ class ModelRegistry:
             "type": "regression",
             "class": Lasso,
             "params": {"alpha": 1.0},
-            "description": "Linear regression with L1 regularization. It encourages sparse models by forcing some coefficients to become zero, effectively performing feature selection.",
+            "description": "Linear regression with L1 regularization. Encourages sparsity (feature selection).",
             "formula": "Loss = RSS + α * ||β||₁",
             "param_meta": {
-                "alpha": {
-                    "type": "number", "min": 0.01, "max": 10.0, "step": 0.1, "label": "Regularization Strength (Alpha)",
-                    "help": "Controls sparsity. Higher values force more features to have zero influence, effectively selecting only the most important features."
-                }
+                "alpha": {"type": "number", "min": 0.01, "max": 10.0, "step": 0.1, "label": "Alpha", "help": "Regularization strength. Can zero out coefficients, effectively selecting features."}
+            }
+        },
+        "elastic_net": {
+            "name": "ElasticNet Regression",
+            "type": "regression",
+            "class": ElasticNet,
+            "params": {"alpha": 1.0, "l1_ratio": 0.5},
+            "description": "Combines L1 and L2 regularization. Good for correlated features.",
+            "formula": "Loss = RSS + α * L1 + β * L2",
+            "param_meta": {
+                "alpha": {"type": "number", "min": 0.01, "max": 10.0, "step": 0.1, "label": "Alpha", "help": "Total regularization penalty."},
+                "l1_ratio": {"type": "number", "min": 0.0, "max": 1.0, "step": 0.1, "label": "L1 Ratio", "help": "Mix between L1 (Lasso) and L2 (Ridge). 0 is Ridge, 1 is Lasso."}
+            }
+        },
+        "sgd_regressor": {
+            "name": "SGD Regressor",
+            "type": "regression",
+            "class": SGDRegressor,
+            "params": {"alpha": 0.0001, "max_iter": 1000, "penalty": "l2"},
+            "description": "Linear model fitted by minimizing a regularized empirical loss with SGD. Efficient for large datasets.",
+            "formula": "w ← w - η(∇Loss)",
+            "param_meta": {
+                 "alpha": {"type": "number", "min": 0.0001, "max": 0.1, "step": 0.0001, "label": "Alpha", "help": "Constant that multiplies the regularization term."},
+                 "max_iter": {"type": "number", "min": 100, "max": 5000, "step": 100, "label": "Max Iter", "help": "Maximum number of passes over the training data."}
+            }
+        },
+        "bayesian_ridge": {
+            "name": "Bayesian Ridge",
+            "type": "regression",
+            "class": BayesianRidge,
+            "params": {"n_iter": 300},
+            "description": "Bayesian approach to Ridge Regression. Estimates regularization parameters from data.",
+            "formula": "Probabilistic model with Gaussian priors",
+            "param_meta": {
+                "n_iter": {"type": "number", "min": 100, "max": 1000, "label": "Iterations", "help": "Maximum number of iterations suitable for convergence."}
+            }
+        },
+        "huber_regressor": {
+            "name": "Huber Regressor",
+            "type": "regression",
+            "class": HuberRegressor,
+            "params": {"epsilon": 1.35, "max_iter": 100},
+            "description": "Robust to outliers. Uses squared loss for small errors and linear loss for large errors.",
+            "formula": "Robust Loss Function",
+            "param_meta": {
+                "epsilon": {"type": "number", "min": 1.0, "max": 2.0, "step": 0.1, "label": "Epsilon", "help": "The parameter epsilon controls the number of samples that should be classified as outliers."}
             }
         },
         "rf_regressor": {
@@ -54,17 +110,46 @@ class ModelRegistry:
             "type": "regression",
             "class": RandomForestRegressor,
             "params": {"n_estimators": 100, "max_depth": 20, "random_state": 42},
-            "description": "An ensemble method that operates by constructing a multitude of decision trees at training time and outputting the mean prediction of the individual trees.",
-            "formula": "y = (1/N) * Σ Tree_i(x)",
+            "description": "Ensemble of decision trees. Versatile and robust.",
+            "formula": "Average of Tree Predictions",
             "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 50, "max": 500, "step": 50, "label": "Number of Trees",
-                    "help": "The total number of decision trees in the forest. More trees generally improve accuracy and stability but increase training time."
-                },
-                "max_depth": {
-                    "type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "nullable": True,
-                    "help": "The maximum depth of each tree. Deeper trees capture more complex patterns but are more prone to overfitting."
-                }
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "step": 50, "label": "Trees", "help": "The number of trees in the forest. More trees usually improve performance but are slower."},
+                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "nullable": True, "help": "The maximum depth of the tree. Limits overfitting."}
+            }
+        },
+        "extra_trees_regressor": {
+            "name": "Extra Trees Regressor",
+            "type": "regression",
+            "class": ExtraTreesRegressor,
+            "params": {"n_estimators": 100, "max_depth": 20, "random_state": 42},
+            "description": "Similar to Random Forest but chooses split points completely at random. Often faster and reduces variance.",
+            "formula": "Average of Randomized Trees",
+            "param_meta": {
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "step": 50, "label": "Trees", "help": "Number of trees in the forest."},
+                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "help": "Maximum depth of each tree."}
+            }
+        },
+        "gb_regressor": {
+            "name": "Gradient Boosting Regressor",
+            "type": "regression",
+            "class": GradientBoostingRegressor,
+            "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3, "random_state": 42},
+            "description": "Builds an additive model in a forward stage-wise fashion.",
+            "formula": "Sequential Error Correction",
+            "param_meta": {
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "label": "Estimators", "help": "Number of boosting stages to perform."},
+                "learning_rate": {"type": "number", "min": 0.01, "max": 0.5, "step": 0.01, "label": "Learning Rate", "help": "Shrinks the contribution of each tree. Trade-off with n_estimators."}
+            }
+        },
+        "hist_gb_regressor": {
+            "name": "Histogram Gradient Boosting",
+            "type": "regression",
+            "class": HistGradientBoostingRegressor,
+            "params": {"max_iter": 100, "learning_rate": 0.1},
+            "description": "Much faster than standard GB for large datasets (n > 10,000). Inspired by LightGBM.",
+            "formula": "Bin-based Gradient Boosting",
+            "param_meta": {
+                "max_iter": {"type": "number", "min": 50, "max": 500, "label": "Iterations", "help": "Maximum number of iterations of the boosting process."}
             }
         },
         "svr": {
@@ -72,21 +157,35 @@ class ModelRegistry:
             "type": "regression",
             "class": SVR,
             "params": {"C": 1.0, "kernel": "rbf", "epsilon": 0.1},
-            "description": "Applies the principles of Support Vector Machines to regression problems. It tries to fit the error within a certain threshold (epsilon).",
-            "formula": "min ½||w||² + C Σ(ξ+ξ*) subject to |y - <w,x> - b| ≤ ε + ξ",
+            "description": "Epsilon-Support Vector Regression.",
+            "formula": "Margin Maximization",
             "param_meta": {
-                "C": {
-                    "type": "number", "min": 0.1, "max": 100.0, "step": 0.5, "label": "Penalty Parameter (C)",
-                    "help": "Controls the trade-off between achieving a low error on the training data and minimizing the model complexity. High C aims for low training error."
-                },
-                "kernel": {
-                    "type": "select", "options": ["linear", "poly", "rbf", "sigmoid"], "label": "Kernel Function",
-                    "help": "The mathematical function used to map data into a higher-dimensional space. 'rbf' is good for non-linear data."
-                },
-                "epsilon": {
-                    "type": "number", "min": 0.01, "max": 1.0, "step": 0.01, "label": "Epsilon (Margin of Tolerance)",
-                    "help": "Defines a margin of tolerance where no penalty is given to errors. Larger epsilon allows more errors to be ignored."
-                }
+                "C": {"type": "number", "min": 0.1, "max": 100.0, "label": "Penalty C", "help": "Regularization parameter. The strength of the regularization is inversely proportional to C."},
+                "kernel": {"type": "select", "options": ["linear", "poly", "rbf"], "label": "Kernel", "help": "Specifies the kernel type to be used in the algorithm."}
+            }
+        },
+        "knn_regressor": {
+            "name": "K-Neighbors Regressor",
+            "type": "regression",
+            "class": KNeighborsRegressor,
+            "params": {"n_neighbors": 5, "weights": "uniform"},
+            "description": "Regression based on k-nearest neighbors.",
+            "formula": "Average of Neighbors",
+            "param_meta": {
+                "n_neighbors": {"type": "number", "min": 1, "max": 20, "label": "Neighbors (K)", "help": "Number of neighbors to use."},
+                "weights": {"type": "select", "options": ["uniform", "distance"], "label": "Weights", "help": "Weight function used in prediction."}
+            }
+        },
+        "mlp_regressor": {
+            "name": "Neural Network (MLP)",
+            "type": "regression",
+            "class": MLPRegressor,
+            "params": {"hidden_layer_sizes": (100,), "activation": "relu", "solver": "adam", "max_iter": 500},
+            "description": "Multi-layer Perceptron regressor.",
+            "formula": "Feedforward Neural Network",
+            "param_meta": {
+                "max_iter": {"type": "number", "min": 100, "max": 1000, "label": "Max Epochs", "help": "Maximum number of iterations."},
+                "activation": {"type": "select", "options": ["relu", "tanh", "logistic"], "label": "Activation", "help": "Activation function for the hidden layer."}
             }
         },
         "xgboost_regressor": {
@@ -94,55 +193,49 @@ class ModelRegistry:
             "type": "regression",
             "class": xgb.XGBRegressor,
             "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 6, "random_state": 42},
-            "description": "Extreme Gradient Boosting. A scalable distributed gradient-boosted decision tree algorithm known for high performance and speed.",
-            "formula": "y = Σ f_k(x), where f_k are regression trees optimizing specific loss functions.",
+            "description": "Extreme Gradient Boosting. High performance.",
+            "formula": "Gradient Boosted Trees",
             "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 50, "max": 1000, "step": 50, "label": "Number of Boosting Rounds",
-                    "help": "Number of boosting stages to perform. Gradient boosting is fairly robust to over-fitting so a large number usually results in better performance."
-                },
-                "learning_rate": {
-                    "type": "number", "min": 0.001, "max": 0.5, "step": 0.005, "label": "Learning Rate (Eta)",
-                    "help": "Step size shrinkage used in update to prevents overfitting. Lower eta requires more boosting rounds."
-                },
-                "max_depth": {
-                    "type": "number", "min": 3, "max": 15, "step": 1, "label": "Max Tree Depth",
-                    "help": "Maximum depth of a tree. Increasing this value will make the model more complex and more likely to overfit."
-                }
-            }
-        },
-        "adaboost_regressor": {
-            "name": "AdaBoost Regressor",
-            "type": "regression",
-            "class": AdaBoostRegressor,
-            "params": {"n_estimators": 50, "learning_rate": 1.0, "random_state": 42},
-            "description": "Adaptive Boosting. Meta-algorithm that begins by fitting a regressor on the original dataset and then fits additional copies of the regressor but where the weights of instances are adjusted according to the error of the current prediction.",
-            "formula": "H(x) = weighted sum of weak learners",
-            "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 10, "max": 200, "step": 10, "label": "Number of Estimators",
-                    "help": "The maximum number of estimators at which boosting is terminated."
-                },
-                "learning_rate": {
-                    "type": "number", "min": 0.01, "max": 2.0, "step": 0.05, "label": "Learning Rate",
-                    "help": "Weight applied to each regressor at each boosting iteration. A higher learning rate increases the contribution of each regressor."
-                }
+                "n_estimators": {"type": "number", "min": 50, "max": 1000, "label": "Estimators", "help": "Number of gradient boosted trees."},
+                "learning_rate": {"type": "number", "min": 0.01, "max": 0.5, "label": "Learning Rate", "help": "Boosting learning rate."}
             }
         },
 
-        # --- CLASSIFICATION ---
+        # ==========================================
+        #              CLASSIFICATION
+        # ==========================================
         "logistic_regression": {
             "name": "Logistic Regression",
             "type": "classification",
             "class": LogisticRegression,
             "params": {"max_iter": 1000, "solver": "lbfgs", "random_state": 42},
-            "description": "A statistical method for predicting binary classes. It measures the relationship between the categorical dependent variable and one or more independent variables using probability scores.",
-            "formula": "P(y=1) = 1 / (1 + e^-(β₀ + β₁x))",
+            "description": "Standard binary classification benchmark.",
+            "formula": "Sigmoid(Linear Combination)",
             "param_meta": {
-                "max_iter": {
-                    "type": "number", "min": 100, "max": 5000, "step": 100, "label": "Max Iterations",
-                    "help": "Maximum number of iterations taken for the solvers to converge."
-                }
+                "max_iter": {"type": "number", "min": 100, "max": 5000, "label": "Max Iter", "help": "Maximum number of iterations taken for the solvers to converge."}
+            }
+        },
+        "ridge_classifier": {
+            "name": "Ridge Classifier",
+            "type": "classification",
+            "class": RidgeClassifier,
+            "params": {"alpha": 1.0},
+            "description": "Classifier using Ridge regression. Fast for multi-class.",
+            "formula": "Ridge Regression -> Sign",
+            "param_meta": {
+                "alpha": {"type": "number", "min": 0.01, "max": 10.0, "label": "Alpha", "help": "Regularization strength."}
+            }
+        },
+        "sgd_classifier": {
+            "name": "SGD Classifier",
+            "type": "classification",
+            "class": SGDClassifier,
+            "params": {"loss": "hinge", "penalty": "l2", "alpha": 0.0001, "max_iter": 1000},
+            "description": "Linear classifier (SVM/LogReg) optimized by SGD. Key for massive datasets.",
+            "formula": "SGD Optimization",
+            "param_meta": {
+                "loss": {"type": "select", "options": ["hinge", "log_loss", "modified_huber"], "label": "Loss Function", "help": "The loss function to be used. 'hinge' gives a linear SVM."},
+                "alpha": {"type": "number", "min": 0.0001, "max": 0.1, "label": "Alpha", "help": "Constant that multiplies the regularization term."}
             }
         },
         "rf_classifier": {
@@ -150,21 +243,45 @@ class ModelRegistry:
             "type": "classification",
             "class": RandomForestClassifier,
             "params": {"n_estimators": 100, "max_depth": None, "criterion": "gini", "random_state": 42},
-            "description": "A meta estimator that fits a number of decision tree classifiers on various sub-samples of the dataset and uses averaging to improve the predictive accuracy and control over-fitting.",
-            "formula": "Class = Mode of classes output by individual trees",
+            "description": "Ensemble of decision trees for classification.",
+            "formula": "Majority Vote",
             "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 10, "max": 500, "step": 10, "label": "Number of Trees",
-                    "help": "The number of trees in the forest. Generally, more trees give better performance but retain more memory."
-                },
-                "max_depth": {
-                    "type": "number", "min": 1, "max": 50, "step": 1, "label": "Max Depth", "nullable": True,
-                    "help": "The maximum depth of the tree. Unconstrained depth allows the tree to grow until all leaves are pure."
-                },
-                "criterion": {
-                    "type": "select", "options": ["gini", "entropy", "log_loss"], "label": "Split Criterion",
-                    "help": "The function to measure the quality of a split. 'Gini' for Gini impurity and 'entropy' for information gain."
-                }
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "label": "Trees", "help": "The number of trees in the forest."},
+                "criterion": {"type": "select", "options": ["gini", "entropy", "log_loss"], "label": "Criterion", "help": "The function to measure the quality of a split."}
+            }
+        },
+        "extra_trees_classifier": {
+            "name": "Extra Trees Classifier",
+            "type": "classification",
+            "class": ExtraTreesClassifier,
+            "params": {"n_estimators": 100, "max_depth": None, "criterion": "gini", "random_state": 42},
+            "description": "Extremely Randomized Trees. Lower variance than RF.",
+            "formula": "Randomized Ensemble Vote",
+            "param_meta": {
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "label": "Trees", "help": "The number of trees in the forest."}
+            }
+        },
+        "gb_classifier": {
+            "name": "Gradient Boosting Classifier",
+            "type": "classification",
+            "class": GradientBoostingClassifier,
+            "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3, "random_state": 42},
+            "description": "Sequential boosting for classification.",
+            "formula": "Weighted Vote of Weak Learners",
+            "param_meta": {
+                "n_estimators": {"type": "number", "min": 50, "max": 500, "label": "Estimators", "help": "The number of boosting stages to perform."},
+                "learning_rate": {"type": "number", "min": 0.01, "max": 1.0, "label": "Learning Rate", "help": "Shrinks the contribution of each tree."}
+            }
+        },
+        "hist_gb_classifier": {
+            "name": "Histogram Gradient Boosting (Cls)",
+            "type": "classification",
+            "class": HistGradientBoostingClassifier,
+            "params": {"max_iter": 100, "learning_rate": 0.1},
+            "description": "High-performance GB for large datasets. Supports missing values natively.",
+            "formula": "Histogram-based Boosting",
+            "param_meta": {
+                "max_iter": {"type": "number", "min": 50, "max": 500, "label": "Iterations", "help": "Maximum number of iterations."}
             }
         },
         "svc": {
@@ -172,35 +289,77 @@ class ModelRegistry:
             "type": "classification",
             "class": SVC,
             "params": {"C": 1.0, "kernel": "rbf", "probability": True, "random_state": 42},
-            "description": "Finds the hyperplane that best separates the classes in the vector space. High effectiveness in high dimensional spaces.",
-            "formula": "Maximize margin between classes utilizing kernel tricks.",
+            "description": "Effective in high dimensional spaces. Good for complex boundaries.",
+            "formula": "Hyperplane Margin Maximization",
             "param_meta": {
-                "C": {
-                    "type": "number", "min": 0.1, "max": 100.0, "step": 0.5, "label": "Penalty Cost (C)",
-                    "help": "Regularization parameter. The strength of the regularization is inversely proportional to C."
-                },
-                "kernel": {
-                    "type": "select", "options": ["linear", "poly", "rbf", "sigmoid"], "label": "Kernel Function",
-                    "help": "Specifies the kernel type to be used in the algorithm. 'rbf' is a safe default for non-linear problems."
-                }
+                "C": {"type": "number", "min": 0.1, "max": 100.0, "label": "Penalty C", "help": "Regularization parameter."},
+                "kernel": {"type": "select", "options": ["linear", "rbf", "poly"], "label": "Kernel", "help": "Specifies the kernel type to be used."}
+            }
+        },
+        "linear_svc": {
+            "name": "Linear SVC",
+            "type": "classification",
+            "class": LinearSVC,
+            "params": {"C": 1.0, "max_iter": 1000},
+            "description": "Faster (Liblinear) implementation of SVC with linear kernel.",
+            "formula": "Linear Hyperplane",
+            "param_meta": {
+                "C": {"type": "number", "min": 0.1, "max": 100.0, "label": "Penalty C", "help": "Regularization parameter."}
+            }
+        },
+        "gaussian_nb": {
+            "name": "Gaussian Naive Bayes",
+            "type": "classification",
+            "class": GaussianNB,
+            "params": {},
+            "description": "Probabilistic classifier based on Bayes' theorem. Assumes Gaussian distribution of features.",
+            "formula": "P(c|x) ∝ P(x|c)P(c)",
+            "param_meta": {}
+        },
+        "multinomial_nb": {
+            "name": "Multinomial Naive Bayes",
+            "type": "classification",
+            "class": MultinomialNB,
+            "params": {"alpha": 1.0},
+            "description": "Naive Bayes for potential count data (e.g. text classification).",
+            "formula": "P(c|x) based on multinomial distribution",
+            "param_meta": {
+                "alpha": {"type": "number", "min": 0.1, "max": 10.0, "label": "Smoothing", "help": "Additive (Laplace/Lidstone) smoothing parameter."}
+            }
+        },
+        "bernoulli_nb": {
+            "name": "Bernoulli Naive Bayes",
+            "type": "classification",
+            "class": BernoulliNB,
+            "params": {"alpha": 1.0},
+            "description": "Naive Bayes for binary/boolean features.",
+            "formula": "Independent Bernoulli trials",
+            "param_meta": {
+                "alpha": {"type": "number", "min": 0.1, "max": 10.0, "label": "Smoothing", "help": "Additive (Laplace/Lidstone) smoothing parameter."}
             }
         },
         "knn_classifier": {
-            "name": "K-Nearest Neighbors",
+            "name": "K-Neighbors Classifier",
             "type": "classification",
             "class": KNeighborsClassifier,
             "params": {"n_neighbors": 5, "weights": "uniform"},
-            "description": "Instance-based learning where specific new cases are classified based on a majority vote of their K nearest neighbors measured by distance.",
-            "formula": "Class assigned based on majority class of k-nearest neighbors.",
+            "description": "Majority vote of nearest neighbors.",
+            "formula": "Lazy Learning",
             "param_meta": {
-                "n_neighbors": {
-                    "type": "number", "min": 1, "max": 50, "step": 1, "label": "Neighbors (K)",
-                    "help": "Number of neighbors to use. Smaller K is noise-sensitive, while larger K smooths the decision boundary."
-                },
-                "weights": {
-                    "type": "select", "options": ["uniform", "distance"], "label": "Weight Function",
-                    "help": "'uniform' weights all neighbors equally. 'distance' weights points by the inverse of their distance (closer points count more)."
-                }
+                "n_neighbors": {"type": "number", "min": 1, "max": 20, "label": "Neighbors (K)", "help": "Number of neighbors to use."},
+                "weights": {"type": "select", "options": ["uniform", "distance"], "label": "Weights", "help": "Weight function used in prediction."}
+            }
+        },
+        "mlp_classifier": {
+            "name": "Neural Network (MLP)",
+            "type": "classification",
+            "class": MLPClassifier,
+            "params": {"hidden_layer_sizes": (100,), "activation": "relu", "solver": "adam", "max_iter": 500},
+            "description": "Multi-layer Perceptron classifier.",
+            "formula": "Deep Feedforward Network",
+            "param_meta": {
+                "max_iter": {"type": "number", "min": 100, "max": 1000, "label": "Max Epochs", "help": "Maximum number of iterations."},
+                "activation": {"type": "select", "options": ["relu", "tanh", "logistic"], "label": "Activation", "help": "Activation function for the hidden layer."}
             }
         },
         "xgboost_classifier": {
@@ -208,43 +367,49 @@ class ModelRegistry:
             "type": "classification",
             "class": xgb.XGBClassifier,
             "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 6, "use_label_encoder": False, "eval_metric": "logloss", "random_state": 42},
-            "description": "Implementation of gradient boosted decision trees designed for speed and performance. Dominates structured data problems.",
-            "formula": "P(y) obtained by transforming the ensemble output score via logistic function.",
+            "description": "Optimized Gradient Boosting.",
+            "formula": "Gradient Boosted Trees",
             "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 50, "max": 1000, "step": 50, "label": "Number of Boosting Rounds",
-                    "help": "Number of gradient boosted trees. Equivalent to number of boosting rounds."
-                },
-                "learning_rate": {
-                    "type": "number", "min": 0.001, "max": 0.5, "step": 0.005, "label": "Learning Rate",
-                    "help": "Boosting learning rate (step size shrinkage). Controls update magnitude to prevent overfitting."
-                },
-                "max_depth": {
-                    "type": "number", "min": 3, "max": 15, "step": 1, "label": "Max Tree Depth",
-                    "help": "Maximum depth of a tree. Deeper trees can model more complex interactions."
-                }
+                "n_estimators": {"type": "number", "min": 50, "max": 1000, "label": "Estimators", "help": "Number of gradient boosted trees."},
+                "learning_rate": {"type": "number", "min": 0.01, "max": 0.5, "label": "Learning Rate", "help": "Boosting learning rate."}
             }
         },
-         "gb_classifier": {
-            "name": "Gradient Boosting Classifier",
-            "type": "classification",
-            "class": GradientBoostingClassifier,
-            "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3, "random_state": 42},
-            "description": "Builds an additive model in a forward stage-wise fashion; it allows for the optimization of arbitrary differentiable loss functions.",
-            "formula": "Sequential correction of residual errors by new weak learners.",
+
+        # ==========================================
+        #              CLUSTERING
+        # ==========================================
+        "kmeans": {
+            "name": "K-Means Clustering",
+            "type": "clustering",
+            "class": KMeans,
+            "params": {"n_clusters": 3, "random_state": 42},
+            "description": "Partitions data into K clusters by minimizing variance within each cluster",
+            "formula": "Minimize Inertia",
             "param_meta": {
-                "n_estimators": {
-                    "type": "number", "min": 50, "max": 500, "step": 50, "label": "Estimators",
-                    "help": "The number of boosting stages to perform."
-                },
-                "learning_rate": {
-                    "type": "number", "min": 0.01, "max": 1.0, "step": 0.01, "label": "Learning Rate",
-                    "help": "Shrinks the contribution of each tree by learning_rate. There is a trade-off between learning_rate and n_estimators."
-                },
-                "max_depth": {
-                    "type": "number", "min": 2, "max": 10, "step": 1, "label": "Max Depth",
-                    "help": "Maximum depth of the individual regression estimators. Limits the number of nodes in the tree."
-                }
+                "n_clusters": {"type": "number", "min": 2, "max": 20, "label": "Clusters (K)", "help": "The number of clusters to form as well as the number of centroids to generate."}
+            }
+        },
+        "dbscan": {
+            "name": "DBSCAN",
+            "type": "clustering",
+            "class": DBSCAN,
+            "params": {"eps": 0.5, "min_samples": 5},
+            "description": "Density-Based Spatial Clustering. Finds core samples of high density and expands clusters from them.",
+            "formula": "Density Reachability",
+            "param_meta": {
+                "eps": {"type": "number", "min": 0.1, "max": 5.0, "step": 0.1, "label": "Epsilon (Radius)", "help": "The maximum distance between two samples for one to be considered as in the neighborhood of the other."},
+                "min_samples": {"type": "number", "min": 2, "max": 20, "label": "Min Samples", "help": "The number of samples in a neighborhood for a point to be considered as a core point."}
+            }
+        },
+        "agglomerative": {
+            "name": "Agglomerative Clustering",
+            "type": "clustering",
+            "class": AgglomerativeClustering,
+            "params": {"n_clusters": 3},
+            "description": "Hierarchical clustering using a bottom-up approach.",
+            "formula": "Hierarchical Merging",
+            "param_meta": {
+                "n_clusters": {"type": "number", "min": 2, "max": 20, "label": "Clusters (K)", "help": "The number of clusters to find."}
             }
         }
     }

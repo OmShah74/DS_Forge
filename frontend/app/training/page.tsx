@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useExplainabilityStore } from "@/store/explainabilityStore";
+import { useConfigStore } from "@/store/configStore";
 import { Info } from "lucide-react";
 
 export default function TrainingPage() {
@@ -30,6 +31,7 @@ export default function TrainingPage() {
     const [featureAnalysis, setFeatureAnalysis] = useState<any[]>([]);
     const [recommendations, setRecommendations] = useState<any[]>([]);
     const { openHelp } = useExplainabilityStore();
+    const { apiKey, llmProvider, modelName } = useConfigStore(); // Get LLM Config
 
     // UI State
     const [isSubmitting, setIsSubmitting] = useState(false);
@@ -77,7 +79,16 @@ export default function TrainingPage() {
         // We use Promise.allSettled to ensure one failure doesn't block the other
         Promise.allSettled([
             api.post("/analysis/features", { dataset_id: selectedDsId, target_column: target }),
-            api.post("/models/recommend", { dataset_id: selectedDsId, target_column: target, task_type: typeOverride })
+
+            // PASS LLM CONFIG HERE
+            api.post("/models/recommend", {
+                dataset_id: selectedDsId,
+                target_column: target,
+                task_type: typeOverride,
+                provider: llmProvider,
+                api_key: apiKey,
+                model: modelName
+            })
         ]).then(([resFeatures, resRecs]) => {
 
             // Handle Features
