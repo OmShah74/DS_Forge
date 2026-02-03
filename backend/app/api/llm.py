@@ -38,33 +38,50 @@ async def evaluate_run(req: EvaluationRequest):
         raise HTTPException(status_code=500, detail=f"LLM Error: {str(e)}")
 
 def _construct_prompt(ctx: Dict[str, Any]) -> str:
-    # Safely extract metrics
+    # 1. Hardware/Data Context
     metrics = ctx.get("metrics", {})
-    metrics_str = "\n".join([f"- {k}: {v}" for k, v in metrics.items()])
+    metrics_str = "\n".join([f"- {k.replace('_', ' ').title()}: {v:.4f}" if isinstance(v, float) else f"- {k}: {v}" for k, v in metrics.items()])
     
-    # Feature Importance
+    # 2. Features
     features = ctx.get("detailed_report", {}).get("feature_importance", {})
     top_features = sorted(features.items(), key=lambda x: x[1], reverse=True)[:5]
-    features_str = ", ".join([f"{k} ({v:.3f})" for k, v in top_features])
+    features_str = ", ".join([f"{k} ({v:.1%})" for k, v in top_features])
 
+    # 3. Model Context
+    model_name = ctx.get('model_name', 'Unknown Model')
+    params = ctx.get('parameters', {})
+    param_str = ", ".join([f"{k}={v}" for k, v in params.items()])
+    
+    # 4. Construct Narrative Prompt
     return f"""
-    You are an expert Data Science AI Analyst. Analyze the following training run:
-    
-    **Model**: {ctx.get('model_name')}
-    **Dataset**: {ctx.get('dataset_name', 'Unknown')}
-    **Status**: {ctx.get('status')}
-    
-    **Performance Metrics**:
+    You are a Senior Data Science Consultant reviewing a training run. Your goal is to explain the results to a business user and suggest concrete improvements.
+
+    ### 1. EXPERIMENT CONTEXT
+    - **Algorithm**: {model_name}
+    - **Hyperparameters**: {param_str}
+    - **Dataset Status**: {ctx.get('status', 'Unknown')}
+    - **Top Features**: {features_str}
+
+    ### 2. PERFORMANCE METRICS
     {metrics_str}
-    
-    **Top Features**: {features_str}
-    
-    **Task**:
-    1. Evaluate if this model is "Good", "Bad", or "Overfitting".
-    2. Explain the metrics simply (what does the Accuracy/F1/MAE actually mean here?).
-    3. Suggest 2 concrete improvements (e.g. data cleaning, hyperparams).
-    
-    Keep response concise (max 200 words). Use Markdown.
+
+    ### 3. YOUR TASK
+    Provide a concise, 3-part analysis in Markdown:
+
+    **1. Executive Summary (2-3 sentences)**
+    - Is this model "Production Ready", "Promising but needs tuning", or "Unusable"? 
+    - Why? (Cite the primary metric, e.g., Accuracy or RMSE).
+
+    **2. Deep Dive & Interpretation**
+    - **Feature Impact**: Explain which features drove the predictions and if that makes logical sense.
+    - **Hyperparameter Critique**: Did the chosen settings (e.g., {param_str}) likely cause overfitting or underfitting?
+    - **Metric Explanation**: Briefly explain *what* the key metric means in plain English (e.g., "An F1 score of 0.8 means...").
+
+    **3. Actionable Recommendations**
+    - Suggest 2 specific next steps.
+    - Examples: "Increase n_estimators to reduce variance", "Drop feature X due to noise", "Collect more data".
+
+    **Tone**: Professional, encouraging, and highly specific. Avoid generic advice.
     """
 
 def _call_openai(key, model, prompt):

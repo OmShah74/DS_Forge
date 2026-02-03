@@ -5,7 +5,7 @@ import { Dataset, ModelOption, TrainingRun } from "@/lib/types";
 import {
     BrainCircuit, Play, Activity, AlertCircle,
     CheckCircle, Loader2, Clock, Trash2,
-    Download, ChevronDown, ListFilter, Target, Box, Settings, Terminal, HelpCircle
+    Download, ChevronDown, ChevronUp, ListFilter, Target, Box, Settings, Terminal, HelpCircle, Sparkles
 } from "lucide-react";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useExplainabilityStore } from "@/store/explainabilityStore";
@@ -26,17 +26,26 @@ export default function TrainingPage() {
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
     const [selectedModelKey, setSelectedModelKey] = useState<string>("");
     const [selectedParams, setSelectedParams] = useState<Record<string, any>>({});
+
     const [featureAnalysis, setFeatureAnalysis] = useState<any[]>([]);
+    const [recommendations, setRecommendations] = useState<any[]>([]);
     const { openHelp } = useExplainabilityStore();
 
     // UI State
     const [isSubmitting, setIsSubmitting] = useState(false);
     const [showFeatureMatrix, setShowFeatureMatrix] = useState(false);
 
+    // Advanced State
+    const [taskType, setTaskType] = useState<"classification" | "regression">("regression");
+    const [isModelDropdownOpen, setIsModelDropdownOpen] = useState(false);
+
+    // Filter models based on task type
+    const availableModels = models.filter(m => m.type === taskType);
+
     // 1. Initial Load
     useEffect(() => {
-        api.get("/datasets/").then(res => setDatasets(res.data));
-        api.get("/models/").then(res => setModels(res.data));
+        api.get("/datasets/").then(res => setDatasets(res.data)).catch(err => console.error("Datasets fetch failed", err));
+        api.get("/models/").then(res => setModels(res.data)).catch(err => console.error("Models fetch failed", err));
         fetchRuns();
 
         // High-frequency polling for telemetry (every 2s for "live" feel)
@@ -45,7 +54,10 @@ export default function TrainingPage() {
     }, []);
 
     const fetchRuns = () => {
-        api.get("/training/runs").then(res => setRuns(res.data));
+        // Silently catch polling errors to avoid spamming the user
+        api.get("/training/runs")
+            .then(res => setRuns(res.data))
+            .catch(() => { });
     };
 
     // 2. When Dataset changes, fetch columns
@@ -61,19 +73,54 @@ export default function TrainingPage() {
         }
     }, [selectedDsId]);
 
+    const fetchAnalysisAndRecs = (target: string, typeOverride: string | null) => {
+        // We use Promise.allSettled to ensure one failure doesn't block the other
+        Promise.allSettled([
+            api.post("/analysis/features", { dataset_id: selectedDsId, target_column: target }),
+            api.post("/models/recommend", { dataset_id: selectedDsId, target_column: target, task_type: typeOverride })
+        ]).then(([resFeatures, resRecs]) => {
+
+            // Handle Features
+            if (resFeatures.status === 'fulfilled') {
+                setFeatureAnalysis(resFeatures.value.data);
+            } else {
+                console.error("Feature Analysis Failed", resFeatures.reason);
+                setFeatureAnalysis([]);
+            }
+
+            // Handle Recommendations
+            if (resRecs.status === 'fulfilled') {
+                const recs = resRecs.value.data;
+                setRecommendations(recs);
+
+                // If this was an auto-detect (typeOverride is null), perform a smart switch of the UI toggler
+                // based on the first recommendation's type if possible, or infer from logic.
+                if (!typeOverride && recs.length > 0) {
+                    const bestRec = recs[0];
+                    const modelDef = models.find(m => m.key === bestRec.key);
+                    if (modelDef) {
+                        setTaskType(modelDef.type as any);
+                    }
+                    // Auto-select best model
+                    handleModelChange(bestRec.key);
+                }
+            } else {
+                console.error("Recommendations Failed", resRecs.reason);
+                setRecommendations([]);
+            }
+        });
+    };
+
     const handleTargetChange = (val: string) => {
         setSelectedTarget(val);
+        setIsModelDropdownOpen(false);
         if (val) {
             setSelectedFeatures(columns.filter(c => c !== val));
-            // Run Analysis
-            api.post("/analysis/features", {
-                dataset_id: selectedDsId,
-                target_column: val
-            }).then(res => {
-                setFeatureAnalysis(res.data);
-            }).catch(console.error);
+            // Pass null to let backend auto-detect initially
+            fetchAnalysisAndRecs(val, null);
         } else {
             setFeatureAnalysis([]);
+            setRecommendations([]);
         }
     };
 
@@ -87,6 +134,15 @@ export default function TrainingPage() {
 
     const updateParam = (key: string, val: any) => {
         setSelectedParams(prev => ({ ...prev, [key]: val }));
+    };
+
+    const toggleTaskType = (type: "classification" | "regression") => {
+        setTaskType(type);
+        setRecommendations([]); // Clear old recs
+        setSelectedModelKey("");
+        if (selectedTarget) {
+            fetchAnalysisAndRecs(selectedTarget, type);
+        }
     };
 
     const toggleFeature = (col: string) => {
@@ -143,9 +199,9 @@ export default function TrainingPage() {
     };
 
     return (
-        <main className="max-w-[1600px] mx-auto h-[calc(100vh-80px)] overflow-y-auto space-y-12 animate-in fade-in duration-700 pr-4 custom-scrollbar">
+        <main className="min-h-screen bg-[#020408] text-white overflow-x-hidden selection:bg-purple-500/30 selection:text-purple-200 pb-20">
             {/* Header */}
-            <header className="flex flex-col gap-2 px-1">
+            <header className="max-w-7xl mx-auto px-6 pt-8 pb-12 relative z-10">
                 <div className="flex items-center gap-3">
                     <div className="p-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center">
                         <BrainCircuit size={24} className="text-purple-500" />
@@ -168,10 +224,11 @@ export default function TrainingPage() {
                 </p>
             </header>
 
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10">
+
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-10 max-w-7xl mx-auto px-6">
 
                 {/* LEFT: Configuration Panel */}
-                <div className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/40 h-fit space-y-8 shadow-2xl relative overflow-hidden">
+                <div className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/40 h-fit space-y-8 shadow-2xl relative">
                     <div className="px-1 border-b border-white/5 pb-4">
                         <h3 className="text-sm font-bold text-gray-400 tracking-wide uppercase">Pipeline Configuration</h3>
                     </div>
@@ -284,24 +341,110 @@ export default function TrainingPage() {
                             )}
                         </div>
 
-                        {/* Model Select */}
-                        <div className="space-y-3">
-                            <label className="text-sm font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
-                                <Activity size={14} className="text-purple-500" /> Protocol / Algorithm
-                            </label>
-                            <select
-                                className="w-full bg-black/40 border border-white/10 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none transition-all appearance-none cursor-pointer font-medium"
-                                onChange={(e) => handleModelChange(e.target.value)}
-                                value={selectedModelKey}
-                            >
-                                <option value="" className="bg-[#04060c]">Select logic...</option>
-                                {models.map(m => (
-                                    <option key={m.key} value={m.key} className="bg-[#04060c]">
-                                        [{m.type.toUpperCase()}] {m.name}
-                                    </option>
-                                ))}
-                            </select>
-                        </div>
+                        {/* Model Configuration */}
+                        {selectedTarget && (
+                            <div className="p-6 rounded-3xl bg-white/[0.02] border border-white/5 space-y-6 backdrop-blur-sm animate-in fade-in slide-in-from-left-4">
+
+                                {/* Task Type Switcher */}
+                                <div className="flex bg-black/40 p-1 rounded-xl border border-white/5">
+                                    <button
+                                        onClick={() => toggleTaskType("regression")}
+                                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${taskType === 'regression' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        Regression
+                                    </button>
+                                    <button
+                                        onClick={() => toggleTaskType("classification")}
+                                        className={`flex-1 py-2 text-xs font-bold uppercase tracking-wider rounded-lg transition-all ${taskType === 'classification' ? 'bg-purple-600 text-white shadow-lg shadow-purple-900/20' : 'text-gray-500 hover:text-gray-300'}`}
+                                    >
+                                        Classification
+                                    </button>
+                                </div>
+
+                                {/* Custom Model Dropdown */}
+                                <div className="relative space-y-3">
+                                    <label className="text-sm font-semibold text-gray-500 tracking-wide px-1 flex items-center gap-2">
+                                        <Activity size={14} className="text-purple-500" /> Protocol / Algorithm
+                                    </label>
+
+                                    <button
+                                        onClick={() => setIsModelDropdownOpen(!isModelDropdownOpen)}
+                                        className="w-full bg-[#09090b] border border-white/10 rounded-xl p-4 text-left flex justify-between items-center hover:border-purple-500/30 transition-all group"
+                                    >
+                                        <span className={`text-sm font-medium ${selectedModelKey ? 'text-white' : 'text-gray-500'}`}>
+                                            {selectedModelKey ? models.find(m => m.key === selectedModelKey)?.name : "Select an algorithm..."}
+                                        </span>
+                                        {isModelDropdownOpen ? <ChevronUp size={16} className="text-purple-500" /> : <ChevronDown size={16} className="text-gray-600 group-hover:text-purple-500" />}
+                                    </button>
+
+                                    {isModelDropdownOpen && (
+                                        <div className="absolute top-full left-0 right-0 mt-2 bg-[#09090b] border border-white/10 rounded-xl shadow-2xl overflow-hidden z-50 max-h-80 overflow-y-auto">
+
+                                            {/* Recommendations Section */}
+                                            {recommendations.length > 0 && (
+                                                <div className="p-2">
+                                                    <div className="px-2 py-1 text-[10px] font-bold text-emerald-500 uppercase tracking-widest mb-1 flex items-center gap-2">
+                                                        <Sparkles size={10} /> Recommended
+                                                    </div>
+                                                    {recommendations.map(rec => {
+                                                        const model = models.find(m => m.key === rec.key);
+                                                        if (!model || model.type !== taskType) return null; // Only show if matches current task view
+
+                                                        return (
+                                                            <div
+                                                                key={rec.key}
+                                                                onClick={() => { setSelectedModelKey(rec.key); setIsModelDropdownOpen(false); }}
+                                                                className="p-3 rounded-lg hover:bg-emerald-500/10 cursor-pointer group transition-colors border border-transparent hover:border-emerald-500/20"
+                                                            >
+                                                                <div className="flex justify-between items-center mb-1">
+                                                                    <span className="text-white font-bold text-sm tracking-tight">{model.name}</span>
+                                                                    <span className="text-[10px] font-mono text-emerald-400 bg-emerald-500/10 px-1.5 py-0.5 rounded">{rec.match_score}% Match</span>
+                                                                </div>
+                                                                <p className="text-[10px] text-gray-400 group-hover:text-gray-300">
+                                                                    {rec.reason}
+                                                                </p>
+                                                            </div>
+                                                        );
+                                                    })}
+                                                </div>
+                                            )}
+
+                                            <div className="h-px bg-white/5 mx-2 my-1" />
+
+                                            {/* Other Models */}
+                                            <div className="p-2">
+                                                <div className="px-2 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-widest mb-1">
+                                                    Available Architectures
+                                                </div>
+                                                {availableModels.filter(m => !recommendations.find(r => r.key === m.key)).map(model => (
+                                                    <div
+                                                        key={model.key}
+                                                        onClick={() => { setSelectedModelKey(model.key); setIsModelDropdownOpen(false); }}
+                                                        className="p-3 rounded-lg hover:bg-white/5 cursor-pointer transition-colors"
+                                                    >
+                                                        <div className="text-white font-medium text-sm">{model.name}</div>
+                                                        <div className="text-[10px] text-gray-600 truncate">{model.description}</div>
+                                                    </div>
+                                                ))}
+                                                {availableModels.length === 0 && (
+                                                    <div className="p-4 text-center text-xs text-gray-500 italic">
+                                                        No other models found for {taskType}.
+                                                    </div>
+                                                )}
+                                            </div>
+                                        </div>
+                                    )}
+                                </div>
+
+                                {/* Recommendation Reason */}
+                                {selectedModelKey && recommendations.find(r => r.key === selectedModelKey) && (
+                                    <div className="mt-2 px-2 flex items-center gap-2 animate-in fade-in">
+                                        <span className="text-[10px] font-bold uppercase tracking-widest text-emerald-400">✨ Recommendation Engine:</span>
+                                        <span className="text-[10px] text-gray-400 italic">"{recommendations.find(r => r.key === selectedModelKey).reason}"</span>
+                                    </div>
+                                )}
+                            </div>
+                        )}
 
                         {/* Educational / Formula Section */}
                         {selectedModelKey && (
