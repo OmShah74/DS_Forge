@@ -190,15 +190,34 @@ export default function DeploymentPage() {
                     </div>
 
                     {response && (
-                        <div className="animate-in fade-in zoom-in-95 duration-500 mt-8 space-y-3">
+                        <div className="animate-in fade-in zoom-in-95 duration-500 mt-8 space-y-4">
                             <label className={`text-[10px] font-black uppercase tracking-widest px-1 flex items-center gap-2 ${response.error ? "text-rose-500" : "text-emerald-500"}`}>
-                                {response.error ? <AlertCircle size={12} /> : <CheckCircle size={12} />} Response Artifact
+                                {response.error ? <AlertCircle size={12} /> : <CheckCircle size={12} />}
+                                {response.error ? "Inference Failed" : "🎯 Prediction Result"}
                             </label>
-                            <div className={`p-6 rounded-2xl border overflow-hidden relative group ${response.error ? "bg-rose-950/20 border-rose-500/20" : "bg-emerald-950/20 border-emerald-500/20"}`}>
-                                <pre className={`font-mono text-xs overflow-x-auto custom-scrollbar ${response.error ? "text-rose-300" : "text-emerald-300"}`}>
-                                    {JSON.stringify(response, null, 2)}
-                                </pre>
-                            </div>
+
+                            {/* PROMINENT PREDICTION DISPLAY */}
+                            {!response.error && response.predictions && (
+                                <div className="bg-gradient-to-br from-emerald-500/20 to-purple-500/10 border-2 border-emerald-500/40 rounded-2xl p-8 text-center relative overflow-hidden">
+                                    <div className="absolute top-0 right-0 w-40 h-40 bg-emerald-500/10 blur-3xl rounded-full"></div>
+                                    <p className="text-[10px] font-black text-emerald-400 uppercase tracking-[0.3em] mb-4">Your Model Predicts</p>
+                                    <div className="text-6xl font-black text-white mb-2 drop-shadow-lg">
+                                        {response.predictions.map((p: any, i: number) => (
+                                            <span key={i} className="inline-block px-4">{String(p)}</span>
+                                        ))}
+                                    </div>
+                                    <p className="text-xs text-gray-400 mt-4">Run ID: {response.run_id}</p>
+                                </div>
+                            )}
+
+                            {/* Error Display */}
+                            {response.error && (
+                                <div className="bg-rose-950/30 border border-rose-500/30 rounded-2xl p-6">
+                                    <pre className="font-mono text-xs text-rose-300 whitespace-pre-wrap">
+                                        {response.message || JSON.stringify(response, null, 2)}
+                                    </pre>
+                                </div>
+                            )}
                         </div>
                     )}
 
