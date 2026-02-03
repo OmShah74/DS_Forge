@@ -2,14 +2,21 @@
 import { useEffect, useState } from "react";
 import { api } from "@/lib/api";
 import { TrainingRun } from "@/lib/types";
-import { Rocket, Code, Play } from "lucide-react";
+import { Rocket, Code, Play, AlertCircle, CheckCircle, Copy, HelpCircle } from "lucide-react";
 import { useNotificationStore } from "@/store/notificationStore";
+import { useExplainabilityStore } from "@/store/explainabilityStore";
 
 export default function DeploymentPage() {
     const { addToast } = useNotificationStore();
+    const { openHelp } = useExplainabilityStore();
     const [runs, setRuns] = useState<TrainingRun[]>([]);
     const [selectedRunId, setSelectedRunId] = useState<string>("");
-    const [inputJson, setInputJson] = useState<string>("[\n  {\n    \"feature1\": 0.5,\n    \"feature2\": 1.0\n  }\n]");
+
+    // Dynamic Form State
+    const [requiredFeatures, setRequiredFeatures] = useState<string[]>([]);
+    const [featureValues, setFeatureValues] = useState<Record<string, string>>({});
+
+    // Legacy JSON State (computed from form now)
     const [response, setResponse] = useState<any>(null);
     const [isPredicting, setIsPredicting] = useState(false);
 
@@ -17,34 +24,105 @@ export default function DeploymentPage() {
         api.get("/training/runs").then(res => setRuns(res.data.filter((r: any) => r.status === 'completed')));
     }, []);
 
+    // When Model Changes, extract features
+    useEffect(() => {
+        if (!selectedRunId) {
+            setRequiredFeatures([]);
+            setFeatureValues({});
+            return;
+        }
+
+        const run = runs.find(r => r.id === Number(selectedRunId));
+        if (run) {
+            let features: string[] = [];
+            // Priority 1: Explicit feature columns
+            if (run.feature_columns && run.feature_columns.length > 0) {
+                features = run.feature_columns;
+            }
+            // Priority 2: Feature Importance keys from report
+            else if (run.detailed_report?.feature_importance) {
+                features = Object.keys(run.detailed_report.feature_importance);
+            }
+
+            setRequiredFeatures(features);
+
+            // Allow manual override if no features found (edge case)
+            if (features.length === 0) {
+                addToast("Auto-schema detection failed. Please input JSON manually.", "warning");
+            }
+
+            // Reset values
+            const initialValues: Record<string, string> = {};
+            features.forEach(f => initialValues[f] = "");
+            setFeatureValues(initialValues);
+            setResponse(null);
+        }
+    }, [selectedRunId, runs]);
+
+    const handleParamChange = (feature: string, value: string) => {
+        setFeatureValues(prev => ({ ...prev, [feature]: value }));
+    };
+
+    const getPayload = () => {
+        // Convert values to numbers where possible, otherwise keep string
+        const processed: Record<string, any> = {};
+        Object.entries(featureValues).forEach(([k, v]) => {
+            const num = Number(v);
+            processed[k] = isNaN(num) || v === "" ? v : num;
+        });
+        return [processed]; // Wrap in array as expected by backend
+    };
+
     const handlePredict = async () => {
         if (!selectedRunId) return;
         setIsPredicting(true);
+        setResponse(null);
+
         try {
-            const payload = JSON.parse(inputJson);
+            const payload = getPayload();
             const res = await api.post(`/deployment/${selectedRunId}/predict`, payload);
             setResponse(res.data);
             addToast("Inference Successful", "success");
         } catch (error: any) {
-            setResponse({ error: error.response?.data?.detail || "Invalid JSON or Server Error" });
+            console.error(error);
+            setResponse({
+                error: true,
+                message: error.response?.data?.detail || "Prediction failed. Check inputs matches model expectations."
+            });
             addToast("Inference Fault", "error");
         } finally {
             setIsPredicting(false);
         }
     };
 
+    const copyToClipboard = (text: string) => {
+        navigator.clipboard.writeText(text);
+        addToast("Copied to clipboard", "info");
+    };
+
+    const computedJson = JSON.stringify(getPayload(), null, 2);
+
     return (
         <div className="max-w-7xl mx-auto space-y-12 animate-in fade-in duration-700 pb-20">
             {/* Header */}
             <header className="flex flex-col gap-2 px-1">
-                <div className="flex items-center gap-3">
-                    <div className="p-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center">
-                        <Rocket size={24} className="text-purple-500" />
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-3">
+                        <div className="p-3 rounded-2xl bg-purple-600/10 border border-purple-500/20 flex items-center justify-center">
+                            <Rocket size={24} className="text-purple-500" />
+                        </div>
+                        <div>
+                            <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">Access Gateway</h2>
+                            <h1 className="text-3xl font-black text-white italic mt-1 font-mono uppercase tracking-tight">Logic <span className="text-purple-600">Deployment</span></h1>
+                        </div>
                     </div>
-                    <div>
-                        <h2 className="text-[10px] font-black text-purple-500 uppercase tracking-[0.4em] leading-none">Access Gateway</h2>
-                        <h1 className="text-3xl font-black text-white italic mt-1 font-mono uppercase tracking-tight">Logic <span className="text-purple-600">Deployment</span></h1>
-                    </div>
+                    <button
+                        onClick={() => openHelp('deployment')}
+                        className="p-3 rounded-xl bg-white/5 border border-white/5 text-gray-400 hover:text-white hover:bg-white/10 transition-all flex items-center gap-2 group"
+                    >
+                        <HelpCircle size={18} className="group-hover:text-purple-400 transition-colors" />
+                        <span className="text-xs font-bold uppercase tracking-widest hidden md:inline">Protocol Guide</span>
+                    </button>
                 </div>
                 <p className="text-gray-500 text-xs font-medium max-w-lg mt-2">
                     Interface with active inference nodes. Test production protocols and integrate logic into external systems.
@@ -78,14 +156,29 @@ export default function DeploymentPage() {
                             </select>
                         </div>
 
-                        <div className="space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Request Payload (JSON)</label>
-                            <textarea
-                                className="w-full h-48 bg-black/40 border border-white/10 rounded-2xl p-4 font-mono text-xs text-purple-300 focus:ring-2 focus:ring-purple-500/30 outline-none resize-none transition-all"
-                                value={inputJson}
-                                onChange={(e) => setInputJson(e.target.value)}
-                            />
-                        </div>
+                        {selectedRunId && requiredFeatures.length > 0 && (
+                            <div className="space-y-4 animate-in slide-in-from-left-2 duration-500">
+                                <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1 flex items-center gap-2">
+                                    <AlertCircle size={10} /> Dynamic Feature Input
+                                </label>
+                                <div className="grid grid-cols-2 gap-4 bg-white/5 p-4 rounded-xl border border-white/5">
+                                    {requiredFeatures.map(feature => (
+                                        <div key={feature} className="space-y-1">
+                                            <label className="text-[9px] font-mono text-purple-300 uppercase truncate block" title={feature}>
+                                                {feature}
+                                            </label>
+                                            <input
+                                                type="text"
+                                                placeholder="Value..."
+                                                className="w-full bg-black/50 border border-white/10 rounded-lg p-2 text-xs text-white focus:border-purple-500/50 outline-none transition-all"
+                                                value={featureValues[feature] || ""}
+                                                onChange={(e) => handleParamChange(feature, e.target.value)}
+                                            />
+                                        </div>
+                                    ))}
+                                </div>
+                            </div>
+                        )}
 
                         <button
                             onClick={handlePredict}
@@ -98,9 +191,11 @@ export default function DeploymentPage() {
 
                     {response && (
                         <div className="animate-in fade-in zoom-in-95 duration-500 mt-8 space-y-3">
-                            <label className="text-[10px] font-black text-gray-500 uppercase tracking-widest px-1">Response Artifact</label>
-                            <div className="bg-black/40 p-6 rounded-2xl border border-white/5 overflow-hidden">
-                                <pre className="text-emerald-400 font-mono text-xs overflow-x-auto custom-scrollbar">
+                            <label className={`text-[10px] font-black uppercase tracking-widest px-1 flex items-center gap-2 ${response.error ? "text-rose-500" : "text-emerald-500"}`}>
+                                {response.error ? <AlertCircle size={12} /> : <CheckCircle size={12} />} Response Artifact
+                            </label>
+                            <div className={`p-6 rounded-2xl border overflow-hidden relative group ${response.error ? "bg-rose-950/20 border-rose-500/20" : "bg-emerald-950/20 border-emerald-500/20"}`}>
+                                <pre className={`font-mono text-xs overflow-x-auto custom-scrollbar ${response.error ? "text-rose-300" : "text-emerald-300"}`}>
                                     {JSON.stringify(response, null, 2)}
                                 </pre>
                             </div>
@@ -114,32 +209,39 @@ export default function DeploymentPage() {
                 {/* RIGHT: API Documentation */}
                 <div className="flex flex-col gap-10">
                     <div className="glass-panel p-8 rounded-[2rem] border-white/5 bg-black/20 space-y-6 shadow-2xl overflow-hidden relative">
-                        <div className="flex items-center gap-3 px-1 border-b border-white/5 pb-4">
-                            <Code className="text-purple-500" size={16} />
-                            <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Integration Protocol</h2>
+                        <div className="flex items-center justify-between px-1 border-b border-white/5 pb-4">
+                            <div className="flex items-center gap-3">
+                                <Code className="text-purple-500" size={16} />
+                                <h2 className="text-[10px] font-black text-gray-400 uppercase tracking-[0.3em]">Integration Protocol</h2>
+                            </div>
+                            <button onClick={() => copyToClipboard(computedJson)} className="text-gray-600 hover:text-white transition-colors" title="Copy JSON">
+                                <Copy size={14} />
+                            </button>
                         </div>
 
-                        <p className="text-gray-500 text-[10px] font-medium leading-relaxed uppercase tracking-widest px-1">
-                            Execute direct machine-level logic via secure REST endpoints.
-                        </p>
-
-                        <div className="bg-black/60 p-6 rounded-2xl border border-white/5 relative group">
-                            <div className="absolute top-4 right-4 flex gap-1">
-                                <div className="w-2 h-2 rounded-full bg-white/5"></div>
-                                <div className="w-2 h-2 rounded-full bg-white/5"></div>
-                                <div className="w-2 h-2 rounded-full bg-white/5"></div>
+                        <div className="space-y-4">
+                            <p className="text-gray-500 text-[10px] font-medium leading-relaxed uppercase tracking-widest px-1">
+                                Generated Payload (Live Preview)
+                            </p>
+                            <div className="bg-black/60 p-4 rounded-2xl border border-white/5 relative group">
+                                <pre className="text-purple-300 font-mono text-[10px] overflow-x-auto leading-relaxed custom-scrollbar">
+                                    {computedJson}
+                                </pre>
                             </div>
-                            <pre className="text-gray-300 font-mono text-[11px] overflow-x-auto whitespace-pre-wrap leading-relaxed custom-scrollbar">
-                                {`curl -X 'POST' \\
-  'http://localhost:8000/api/v1/deployment/${selectedRunId || "{ID}"}/predict' \\
+                        </div>
+
+                        <div className="space-y-4">
+                            <p className="text-gray-500 text-[10px] font-medium leading-relaxed uppercase tracking-widest px-1">
+                                CURL Command
+                            </p>
+                            <div className="bg-black/60 p-4 rounded-2xl border border-white/5 relative group">
+                                <pre className="text-gray-400 font-mono text-[10px] overflow-x-auto whitespace-pre-wrap leading-relaxed custom-scrollbar max-h-40">
+                                    {`curl -X 'POST' \\
+  '${typeof window !== 'undefined' ? window.location.origin : 'http://localhost:3000'}/api/proxy/deployment/${selectedRunId || "{ID}"}/predict' \\
   -H 'Content-Type: application/json' \\
-  -d '[
-  {
-    "feature1": "value",
-    "feature2": "value"
-  }
-]'`}
-                            </pre>
+  -d '${computedJson}'`}
+                                </pre>
+                            </div>
                         </div>
 
                         {/* Visual decoration */}

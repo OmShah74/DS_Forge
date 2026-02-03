@@ -86,6 +86,7 @@ class TrainingEngine:
                 le_target = LabelEncoder()
                 y = le_target.fit_transform(y)
                 target_classes = [str(c) for c in le_target.classes_]
+                encoders["__target__"] = le_target
             else:
                 target_classes = []
 
@@ -194,6 +195,12 @@ class TrainingEngine:
             model_filename = f"{uuid.uuid4()}.joblib"
             save_path = os.path.join(settings.MODEL_DIR, model_filename)
             joblib.dump(clf, save_path)
+            
+            # Save Encoders
+            if encoders:
+                encoder_filename = model_filename.replace('.joblib', '_encoders.joblib')
+                encoder_path = os.path.join(settings.MODEL_DIR, encoder_filename)
+                joblib.dump(encoders, encoder_path)
 
             # 10. Complete Run
             run.status = "completed"

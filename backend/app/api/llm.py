@@ -53,35 +53,41 @@ def _construct_prompt(ctx: Dict[str, Any]) -> str:
     param_str = ", ".join([f"{k}={v}" for k, v in params.items()])
     
     # 4. Construct Narrative Prompt
+    # 4. Construct Narrative Prompt
     return f"""
-    You are a Senior Data Science Consultant reviewing a training run. Your goal is to explain the results to a business user and suggest concrete improvements.
-
-    ### 1. EXPERIMENT CONTEXT
+    You are a Senior Lead Data Scientist. A junior data scientist has trained a model and needs your rigorous, high-level feedback.
+    
+    ### 1. MODEL CONFIGURATION
     - **Algorithm**: {model_name}
-    - **Hyperparameters**: {param_str}
-    - **Dataset Status**: {ctx.get('status', 'Unknown')}
-    - **Top Features**: {features_str}
+    - **Hyperparameter Settings**: 
+      {param_str if param_str else "Default optimized parameters used."}
+    - **Dataset Context**: {ctx.get('status', 'Unknown')}
+    - **Key Drivers (Features)**: {features_str}
 
     ### 2. PERFORMANCE METRICS
     {metrics_str}
 
-    ### 3. YOUR TASK
-    Provide a concise, 3-part analysis in Markdown:
+    ### 3. YOUR ASSIGNMENT
+    Analyze the above run and provide a structured report in Markdown. Strict rules:
+    
+    **1. Executive Verdict (Pass/Fail)**
+    - START with one of: "✅ PRODUCTION READY", "⚠️ NEEDS TUNING", or "❌ FAILED EXP".
+    - Explain WHY in 1 sentence citing the specific primary metric (e.g., "RMSE of 1.54 is too high given the target range...").
 
-    **1. Executive Summary (2-3 sentences)**
-    - Is this model "Production Ready", "Promising but needs tuning", or "Unusable"? 
-    - Why? (Cite the primary metric, e.g., Accuracy or RMSE).
+    **2. Deep Dive Analysis**
+    - **Feature Logic**: Do the top features ({features_str}) make sense? Are there potential data leaks?
+    - **Hyperparameter Critique**: Look at the settings above. Are they aggressive (high likelihood of overfitting) or conservative? Critique them specifically.
+    - **Error Analysis**: 
+        - If Regression: Discuss RMSE vs MAE. Is the model making large errors on outliers?
+        - If Classification: Discuss Precision/Recall balance.
+    
+    **3. Strategic Recommendations**
+    - Provide 2 concrete, technical next steps. 
+    - BAD: "Tune hyperparameters."
+    - GOOD: "Reduce `learning_rate` to 0.05 and increase `n_estimators` to 500 to capture fine-grained patterns."
+    - GOOD: "Feature Engineer a 'log_duration' column to handle the skew in the 'duration' feature."
 
-    **2. Deep Dive & Interpretation**
-    - **Feature Impact**: Explain which features drove the predictions and if that makes logical sense.
-    - **Hyperparameter Critique**: Did the chosen settings (e.g., {param_str}) likely cause overfitting or underfitting?
-    - **Metric Explanation**: Briefly explain *what* the key metric means in plain English (e.g., "An F1 score of 0.8 means...").
-
-    **3. Actionable Recommendations**
-    - Suggest 2 specific next steps.
-    - Examples: "Increase n_estimators to reduce variance", "Drop feature X due to noise", "Collect more data".
-
-    **Tone**: Professional, encouraging, and highly specific. Avoid generic advice.
+    **Tone**: Authoritative, precise, and educational. No filler words.
     """
 
 def _call_openai(key, model, prompt):

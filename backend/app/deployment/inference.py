@@ -27,8 +27,9 @@ class InferenceService:
         model = joblib.load(run.artifact_path)
         
         # Check for encoders
-        model_dir = os.path.dirname(run.artifact_path)
-        encoder_path = os.path.join(model_dir, "encoders.joblib")
+        base_path = run.artifact_path.replace('.joblib', '')
+        encoder_path = f"{base_path}_encoders.joblib"
+        
         encoders = {}
         if os.path.exists(encoder_path):
             encoders = joblib.load(encoder_path)
@@ -45,6 +46,12 @@ class InferenceService:
                     df[col] = df[col].astype(str).map(lambda x: le.transform([x])[0] if x in le.classes_ else -1)
             
             predictions = model.predict(df)
+            
+            # Decode predictions if target encoder exists
+            if "__target__" in encoders:
+                le_target = encoders["__target__"]
+                predictions = le_target.inverse_transform(predictions)
+                
             return predictions.tolist()
         except Exception as e:
             raise HTTPException(status_code=400, detail=f"Inference failed: {str(e)}")

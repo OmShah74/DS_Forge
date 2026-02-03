@@ -77,5 +77,30 @@ A piece of code can "work" but still be useless. We use metrics to see how often
 **3. Confusion Matrix**
 - **Definition**: A grid showing exactly where the model got confused. The diagonal shows correct predictions.
         `
+    },
+    deployment: {
+        title: "Production Gateway",
+        description: "Interface with live inference nodes for real-world predictions.",
+        guide: `
+### Deployment Protocol
+Once a model is trained, it's ready to "graduate" from the lab to the real world. This page allows you to test that transition.
+
+### How to use:
+**1. Select Logic Artifact**
+- Choose one of your trained models from the dropdown. 
+- The system will automatically fetch the model's "Feature Schema" (what inputs it expects).
+
+**2. Dynamic Input Form**
+- Instead of writing code, simply type values into the boxes.
+- **Example**: If predicting House Prices, you might enter "Rooms: 3", "Size: 1500".
+
+**3. Transmit Request**
+- Clicking this sends your data to the backend inference engine.
+- The model will return a prediction (e.g., "$450,000" or "Spam email").
+
+### Integration:
+- On the right, you'll see a **CURL** command. 
+- You can copy-paste this into your own website or app to use this exact model in your own software!
+        `
     }
 };
