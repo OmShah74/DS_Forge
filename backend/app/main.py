@@ -37,6 +37,9 @@ app.include_router(activities.router, prefix=f"{settings.API_V1_STR}/activities"
 from app.api import llm, system
 app.include_router(llm.router, prefix=f"{settings.API_V1_STR}/llm", tags=["llm"])
 app.include_router(system.router, prefix=f"{settings.API_V1_STR}/system", tags=["system"])
+# Register Analysis Router
+from app.api import analysis
+app.include_router(analysis.router, prefix=f"{settings.API_V1_STR}/analysis", tags=["analysis"])
 
 @app.get(f"{settings.API_V1_STR}/test")
 def test_api():

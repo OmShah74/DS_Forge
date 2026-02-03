@@ -9,6 +9,7 @@ import {
 } from "lucide-react";
 import { useNotificationStore } from "@/store/notificationStore";
 import { useExplainabilityStore } from "@/store/explainabilityStore";
+import { Info } from "lucide-react";
 
 export default function TrainingPage() {
     const { addToast, notifySystem, showConfirm } = useNotificationStore();
@@ -25,6 +26,7 @@ export default function TrainingPage() {
     const [selectedFeatures, setSelectedFeatures] = useState<string[]>([]);
     const [selectedModelKey, setSelectedModelKey] = useState<string>("");
     const [selectedParams, setSelectedParams] = useState<Record<string, any>>({});
+    const [featureAnalysis, setFeatureAnalysis] = useState<any[]>([]);
     const { openHelp } = useExplainabilityStore();
 
     // UI State
@@ -63,6 +65,15 @@ export default function TrainingPage() {
         setSelectedTarget(val);
         if (val) {
             setSelectedFeatures(columns.filter(c => c !== val));
+            // Run Analysis
+            api.post("/analysis/features", {
+                dataset_id: selectedDsId,
+                target_column: val
+            }).then(res => {
+                setFeatureAnalysis(res.data);
+            }).catch(console.error);
+        } else {
+            setFeatureAnalysis([]);
         }
     };
 
@@ -220,25 +231,55 @@ export default function TrainingPage() {
                             </button>
 
                             {showFeatureMatrix && (
-                                <div className="animate-in slide-in-from-top-2 fade-in duration-300 bg-black/60 rounded-2xl border border-white/5 p-4 max-h-[300px] overflow-y-auto custom-scrollbar grid grid-cols-1 gap-2">
-                                    {columns.filter(c => c !== selectedTarget).map(col => (
-                                        <div
-                                            key={col}
-                                            onClick={() => toggleFeature(col)}
-                                            className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${selectedFeatures.includes(col)
-                                                ? 'bg-purple-600/10 border-purple-500/40'
-                                                : 'bg-white/5 border-white/5'
-                                                }`}
+                                <div className="animate-in slide-in-from-top-2 fade-in duration-300 bg-black/60 rounded-2xl border border-white/5 p-4 max-h-[400px] overflow-y-auto custom-scrollbar grid grid-cols-1 gap-2">
+                                    {/* Auto-Select Button */}
+                                    {featureAnalysis.length > 0 && (
+                                        <button
+                                            onClick={() => {
+                                                const goodFeatures = featureAnalysis.filter(f => f.relevance === "High" || f.relevance === "Medium").map(f => f.feature);
+                                                setSelectedFeatures(goodFeatures);
+                                            }}
+                                            className="text-[10px] text-purple-400 font-bold uppercase tracking-widest hover:text-white mb-2 text-left"
                                         >
-                                            <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedFeatures.includes(col) ? 'text-purple-400' : 'text-gray-500'}`}>
-                                                {col}
-                                            </span>
-                                            <div className={`w-3 h-3 rounded-full border-2 ${selectedFeatures.includes(col)
-                                                ? 'bg-purple-500 border-purple-400'
-                                                : 'border-white/10'
-                                                }`}></div>
-                                        </div>
-                                    ))}
+                                            + Auto-Select High Relevance
+                                        </button>
+                                    )}
+
+                                    {columns.filter(c => c !== selectedTarget).map(col => {
+                                        const analysis = featureAnalysis.find(f => f.feature === col);
+                                        const isHigh = analysis?.relevance === "High";
+                                        const isLow = analysis?.relevance === "Low";
+
+                                        return (
+                                            <div
+                                                key={col}
+                                                onClick={() => toggleFeature(col)}
+                                                className={`p-3 rounded-lg border transition-all cursor-pointer flex items-center justify-between ${selectedFeatures.includes(col)
+                                                    ? 'bg-purple-600/10 border-purple-500/40'
+                                                    : 'bg-white/5 border-white/5'
+                                                    }`}
+                                            >
+                                                <div className="flex flex-col gap-1">
+                                                    <div className="flex items-center gap-2">
+                                                        <span className={`text-[10px] font-bold uppercase tracking-widest ${selectedFeatures.includes(col) ? 'text-purple-400' : 'text-gray-500'}`}>
+                                                            {col}
+                                                        </span>
+                                                        {analysis && (
+                                                            <span className={`text-[8px] px-1.5 py-0.5 rounded border ${isHigh ? 'bg-emerald-500/10 border-emerald-500/20 text-emerald-400' : isLow ? 'bg-rose-500/10 border-rose-500/20 text-rose-500' : 'bg-blue-500/10 border-blue-500/20 text-blue-400'}`}>
+                                                                {analysis.relevance}
+                                                            </span>
+                                                        )}
+                                                    </div>
+                                                    {analysis && <span className="text-[9px] text-gray-600">{analysis.reason}</span>}
+                                                </div>
+
+                                                <div className={`w-3 h-3 rounded-full border-2 ${selectedFeatures.includes(col)
+                                                    ? 'bg-purple-500 border-purple-400'
+                                                    : 'border-white/10'
+                                                    }`}></div>
+                                            </div>
+                                        )
+                                    })}
                                 </div>
                             )}
                         </div>
@@ -291,7 +332,17 @@ export default function TrainingPage() {
                                     {Object.entries(models.find(m => m.key === selectedModelKey)!.param_meta).map(([key, meta]: [string, any]) => (
                                         <div key={key} className="space-y-2">
                                             <div className="flex justify-between items-center px-1">
-                                                <span className="text-xs font-semibold text-gray-400">{meta.label || key}</span>
+                                                <div className="flex items-center gap-2 group/help relative">
+                                                    <span className="text-xs font-semibold text-gray-400 border-b border-dotted border-gray-600 cursor-help">{meta.label || key}</span>
+                                                    {meta.help && (
+                                                        <div className="absolute left-0 bottom-full mb-2 w-48 p-3 bg-black border border-white/20 rounded-lg shadow-xl opacity-0 group-hover/help:opacity-100 pointer-events-none transition-opacity z-50">
+                                                            <div className="flex items-start gap-2">
+                                                                <Info size={12} className="text-purple-400 shrink-0 mt-0.5" />
+                                                                <p className="text-[10px] text-gray-300 leading-relaxed">{meta.help}</p>
+                                                            </div>
+                                                        </div>
+                                                    )}
+                                                </div>
                                                 <span className="text-xs font-mono text-purple-400">{selectedParams[key] ?? 'Default'}</span>
                                             </div>
                                             {meta.type === 'number' ? (
@@ -462,6 +513,6 @@ export default function TrainingPage() {
                     <div className="absolute bottom-0 right-0 w-64 h-64 bg-purple-600/[0.005] blur-[60px] rounded-full translate-y-1/2 translate-x-1/2 pointer-events-none"></div>
                 </div>
             </div>
-        </main>
+        </main >
     );
 }
