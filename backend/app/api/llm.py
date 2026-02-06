@@ -168,15 +168,14 @@ def _construct_recommendation_prompt(profile: Dict[str, Any]) -> str:
     - **Missing Values**: {profile.get('missing_ratio', 0):.1%}
     
     ### INSTRUCTIONS
-    1. Select 3 diverse models from this available list:
-       [Linear Regression, Ridge, Lasso, ElasticNet, SGD, Random Forest, Extra Trees, Gradient Boosting, XGBoost, Histogram GB, SVM/SVR, KNN, Neural Network (MLP), Naive Bayes]
+    1. Select 3 diverse models from the AVAILABLE MODELS list below.
     2. Rank them by suitability (1 = Best).
     3. Return ONLY valid JSON in this format:
     
     {{
       "recommendations": [
         {{
-          "model_key": "rf_regressor",  // Must match standard keys (e.g. snake_case of algorithm)
+          "model_key": "rf_regressor",  // MUST be one of the keys listed below!
           "name": "Random Forest",
           "reason": "Robust to outliers and handles mixed feature types well.",
           "score": 95
@@ -184,6 +183,18 @@ def _construct_recommendation_prompt(profile: Dict[str, Any]) -> str:
         ...
       ]
     }}
+
+    ### AVAILABLE MODELS (Use these exact keys)
+    **Regression**: 
+    [linear_regression, ridge_regression, lasso_regression, elastic_net, sgd_regressor, bayesian_ridge, huber_regressor, 
+     rf_regressor, extra_trees_regressor, gb_regressor, hist_gb_regressor, svr, knn_regressor, mlp_regressor, xgboost_regressor]
+
+    **Classification**: 
+    [logistic_regression, ridge_classifier, sgd_classifier, rf_classifier, extra_trees_classifier, gb_classifier, 
+     hist_gb_classifier, svc, linear_svc, gaussian_nb, multinomial_nb, bernoulli_nb, knn_classifier, mlp_classifier, xgboost_classifier]
+
+    **Clustering**: 
+    [kmeans, dbscan, agglomerative]
     
     Do not include markdown formatting or explanations outside the JSON.
     """

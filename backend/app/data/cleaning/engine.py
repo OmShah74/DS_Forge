@@ -158,10 +158,47 @@ class CleaningEngine:
                 limits = params.get('limits', [0.05, 0.05])
                 
                 for col in cols:
-                    if pd.api.types.is_numeric_dtype(df[col]):
-                         lower = df[col].quantile(limits[0])
-                         upper = df[col].quantile(1.0 - limits[1])
-                         df[col] = df[col].clip(lower=lower, upper=upper)
+                     if pd.api.types.is_numeric_dtype(df[col]):
+                          lower = df[col].quantile(limits[0])
+                          upper = df[col].quantile(1.0 - limits[1])
+                          df[col] = df[col].clip(lower=lower, upper=upper)
+
+            # --- 7. MANUAL UPDATES ---
+            elif operation == "manual_update":
+                # params: {'updates': [{'index': int, 'column': str, 'value': any}, ...]}
+                updates = params.get('updates', [])
+                for update in updates:
+                    idx = update.get('index')
+                    col = update.get('column')
+                    val = update.get('value')
+                    
+                    if idx is not None and col in df.columns:
+                        # Handle type conversion if necessary
+                        if pd.api.types.is_numeric_dtype(df[col]):
+                            try:
+                                if val is None or val == "":
+                                     val = np.nan
+                                else:
+                                     val = float(val) if pd.api.types.is_float_dtype(df[col]) else int(float(val))
+                            except (ValueError, TypeError):
+                                pass # Keep original value or handle error? For now, we try our best.
+                        
+                        # Use .loc for label-based or .iloc if index is integer-positional based?
+                        # The preview sends back whatever 'to_dict(orient="records")' gave. 
+                        # Usually, if index is default RangeIndex, loc[idx] works. 
+                        # But if index is shuffled/time-series, we need to be careful.
+                        # The DataGrid usually shows rows in order of 0..N.
+                        # Let's assume the frontend sends the *positional* index (0-based row number in the current view).
+                        # If df was shuffled/filtered, pure positional 'iloc' on the loaded DF is risky IF the df loaded here is just raw file.
+                        # But here, we read the WHOLE file.
+                        # We must rely on the fact that 'index' from frontend corresponds to the index in the DF.
+                        # If the DF has a RangeIndex 0..N, .loc[idx] is fine.
+                        # If strictly positional, use .iloc[idx, df.columns.get_loc(col)]
+                        
+                        # Safe approach: Assume frontend sends positional row index (0 .. N-1 of the file).
+                        if 0 <= idx < len(df):
+                             col_idx = df.columns.get_loc(col)
+                             df.iloc[idx, col_idx] = val
 
             else:
                 raise HTTPException(status_code=400, detail=f"Unknown operation: {operation}")

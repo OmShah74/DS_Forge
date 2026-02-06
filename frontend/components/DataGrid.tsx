@@ -1,14 +1,26 @@
-import { Download, Table as TableIcon, Info, X } from "lucide-react";
+import { Download, Table as TableIcon, Info, X, Edit2 } from "lucide-react";
 import { api } from "@/lib/api";
+import { useState, useRef, useEffect } from "react";
 
 interface DataGridProps {
   columns: string[];
   data: any[];
   datasetId?: number;
   onClose?: () => void;
+  onCellEdit?: (rowIndex: number, column: string, value: any) => void;
+  pendingChanges?: Record<string, any>;
 }
 
-export default function DataGrid({ columns, data, datasetId, onClose }: DataGridProps) {
+export default function DataGrid({ columns, data, datasetId, onClose, onCellEdit, pendingChanges = {} }: DataGridProps) {
+  const [editingCell, setEditingCell] = useState<{ rowIndex: number; column: string } | null>(null);
+  const [editValue, setEditValue] = useState<string>("");
+  const inputRef = useRef<HTMLInputElement>(null);
+
+  useEffect(() => {
+    if (editingCell && inputRef.current) {
+      inputRef.current.focus();
+    }
+  }, [editingCell]);
 
   const handleDownload = async () => {
     if (!datasetId) return;
@@ -24,6 +36,19 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
       link.click();
     } catch (e) {
       console.error("Download failed", e);
+    }
+  };
+
+  const startEditing = (rowIndex: number, column: string, value: any) => {
+    if (!onCellEdit) return;
+    setEditingCell({ rowIndex, column });
+    setEditValue(value === null || value === undefined ? "" : String(value));
+  };
+
+  const commitEdit = () => {
+    if (editingCell && onCellEdit) {
+      onCellEdit(editingCell.rowIndex, editingCell.column, editValue);
+      setEditingCell(null);
     }
   };
 
@@ -71,20 +96,49 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
             {data.map((row, idx) => (
               <tr key={idx} className="hover:bg-emerald-500/[0.03] transition-colors group">
                 {columns.map((col) => {
-                  const val = row[col];
+                  const cellKey = `${idx}-${col}`;
+                  const isPending = cellKey in pendingChanges;
+                  const pendingVal = pendingChanges[cellKey];
+
+                  const val = isPending ? pendingVal : row[col];
+
                   const isNull = val === null || val === undefined || val === "";
                   const isNum = typeof val === 'number';
+                  const isEditing = editingCell?.rowIndex === idx && editingCell?.column === col;
 
                   return (
                     <td
-                      key={`${idx}-${col}`}
-                      className={`p-4 text-sm border-r border-white/[0.02] whitespace-nowrap font-medium transition-all
-                        ${isNull ? 'bg-rose-500/20 text-rose-400 italic font-black text-center' :
-                          isNum ? 'text-cyan-400 font-mono text-center' :
-                            'text-gray-400 group-hover:text-emerald-100'}
+                      key={cellKey}
+                      onDoubleClick={() => startEditing(idx, col, val)}
+                      className={`p-4 text-sm border-r border-white/[0.02] whitespace-nowrap font-medium transition-all relative
+                        ${isEditing ? 'p-0 bg-purple-500/20' : ''}
+                        ${isPending ? 'bg-yellow-500/10 text-yellow-200 ring-inset ring-1 ring-yellow-500/30' : ''}
+                        ${!isEditing && !isPending && isNull ? 'bg-rose-500/20 text-rose-400 italic font-black text-center' :
+                          !isEditing && !isPending && isNum ? 'text-cyan-400 font-mono text-center' :
+                            !isEditing && !isPending ? 'text-gray-400 group-hover:text-emerald-100' : ''}
                       `}
                     >
-                      {isNull ? "NULL / NaN" : isNum ? val.toFixed(4).replace(/\.0000$/, '') : String(val)}
+                      {isEditing ? (
+                        <input
+                          ref={inputRef}
+                          type="text"
+                          value={editValue}
+                          onChange={(e) => setEditValue(e.target.value)}
+                          onBlur={commitEdit}
+                          onKeyDown={(e) => {
+                            if (e.key === 'Enter') commitEdit();
+                            if (e.key === 'Escape') setEditingCell(null);
+                          }}
+                          className="w-full h-full bg-transparent p-4 text-white outline-none font-medium text-center"
+                        />
+                      ) : (
+                        <>
+                          {isPending && (
+                            <div className="absolute top-1 right-1 w-1.5 h-1.5 rounded-full bg-yellow-500 animate-pulse" />
+                          )}
+                          {isNull && !isPending ? "NULL / NaN" : isNum ? Number(val).toFixed(4).replace(/\.0000$/, '') : String(val)}
+                        </>
+                      )}
                     </td>
                   );
                 })}
@@ -108,11 +162,17 @@ export default function DataGrid({ columns, data, datasetId, onClose }: DataGrid
             <div className="w-2.5 h-2.5 rounded bg-emerald-500/30 border border-emerald-500/40"></div>
             <span className="text-gray-500">Valid</span>
           </div>
+          {onCellEdit && (
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded bg-yellow-500/30 border border-yellow-500/40"></div>
+              <span className="text-gray-500">Modified</span>
+            </div>
+          )}
         </div>
         <div className="flex items-center gap-2.5 opacity-60">
           <Info size={12} className="text-emerald-500" />
           <p className="text-[10px] font-bold text-gray-500 uppercase tracking-tight">
-            Preview restricted to 100 entries for performance.
+            Double click cell to update value
           </p>
         </div>
       </div>

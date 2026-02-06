@@ -23,6 +23,60 @@ export default function DatasetsPage() {
     const [size, setSize] = useState({ width: 1200, height: 800 });
     const [isResizing, setIsResizing] = useState(false);
 
+    // --- Manual Edit State (Copied from Cleaning Page) ---
+    const [pendingEdits, setPendingEdits] = useState<Record<string, any>>({});
+
+    const handleCellEdit = (rowIndex: number, column: string, value: any) => {
+        setPendingEdits(prev => ({
+            ...prev,
+            [`${rowIndex}-${column}`]: value
+        }));
+    };
+
+    const handleDiscardEdits = () => {
+        setPendingEdits({});
+        addToast("Edits Discarded", "info");
+    };
+
+    const handleSaveEdits = async () => {
+        if (!inspectingId || Object.keys(pendingEdits).length === 0) return;
+
+        // Convert pending edits map to array of updates
+        const updates = Object.entries(pendingEdits).map(([key, value]) => {
+            const [rowStr, col] = key.split(/-(.+)/);
+            return {
+                index: parseInt(rowStr),
+                column: col,
+                value: value
+            };
+        });
+
+        try {
+            const response = await api.post("/cleaning/apply", {
+                dataset_id: inspectingId,
+                operation: "manual_update",
+                params: { updates }
+            });
+
+            addToast("Batch Update Successful", "success");
+
+            setPendingEdits({});
+
+            // Refresh datasets list
+            fetchDatasets();
+
+            // Switch inspection to new dataset
+            if (response.data.new_dataset_id) {
+                setInspectingId(response.data.new_dataset_id);
+                fetchPreview(response.data.new_dataset_id, previewLimit);
+            }
+
+        } catch (error: any) {
+            const msg = error.response?.data?.detail || "Update failed";
+            addToast(msg, "error");
+        }
+    };
+
     const handleResizeStart = (e: React.MouseEvent) => {
         e.preventDefault();
         setIsResizing(true);
@@ -61,6 +115,7 @@ export default function DatasetsPage() {
     const handleInspect = async (id: number) => {
         setInspectingId(id);
         fetchPreview(id, previewLimit);
+        setPendingEdits({}); // Reset edits on new inspect
     };
 
     const fetchPreview = async (id: number, limit: number) => {
@@ -215,6 +270,26 @@ export default function DatasetsPage() {
                             maxHeight: '90vh'
                         }}
                     >
+                        {/* Pending Edit Controls */}
+                        {Object.keys(pendingEdits).length > 0 && (
+                            <div className="absolute top-8 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#0F172A] border border-yellow-500/30 px-3 py-1.5 rounded-xl shadow-2xl z-[80] animate-in fade-in slide-in-from-top-4">
+                                <span className="text-xs font-bold text-yellow-500">{Object.keys(pendingEdits).length} Pending Changes</span>
+                                <div className="h-4 w-px bg-white/10 mx-1"></div>
+                                <button
+                                    onClick={handleDiscardEdits}
+                                    className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    onClick={handleSaveEdits}
+                                    className="bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-lg transition-colors ml-1"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex-1 p-8 flex flex-col overflow-hidden">
                             {isFetchingPreview ? (
                                 <div className="flex-1 flex flex-col items-center justify-center text-emerald-400">
@@ -246,6 +321,8 @@ export default function DatasetsPage() {
                                             data={previewData.data}
                                             datasetId={inspectingId}
                                             onClose={() => setInspectingId(null)}
+                                            onCellEdit={handleCellEdit}
+                                            pendingChanges={pendingEdits}
                                         />
                                     </div>
                                 </div>

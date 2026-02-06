@@ -66,7 +66,71 @@ export default function CleaningPage() {
         if (selectedId) loadPreview(selectedId);
     }, [previewLimit]);
 
-    // ... (rest of component unchanged until JSX)
+    // --- Manual Edit State ---
+    const [pendingEdits, setPendingEdits] = useState<Record<string, any>>({}); // key: "row-col", val: newValue
+
+    const handleCellEdit = (rowIndex: number, column: string, value: any) => {
+        setPendingEdits(prev => ({
+            ...prev,
+            [`${rowIndex}-${column}`]: value
+        }));
+    };
+
+    const handleDiscardEdits = () => {
+        setPendingEdits({});
+        addToast("Edits Discarded", "info");
+    };
+
+    const handleSaveEdits = async () => {
+        if (!selectedId || Object.keys(pendingEdits).length === 0) return;
+        setLoading(true);
+
+        // Convert pending edits map to array of updates
+        const updates = Object.entries(pendingEdits).map(([key, value]) => {
+            const [rowStr, col] = key.split(/-(.+)/); // Split by first dash only
+            return {
+                index: parseInt(rowStr),
+                column: col,
+                value: value
+            };
+        });
+
+        try {
+            const response = await api.post("/cleaning/apply", {
+                dataset_id: selectedId,
+                operation: "manual_update",
+                params: { updates }
+            });
+
+            addToast("Batch Update Successful", "success");
+            notifySystem("Manual Edit", `Applied ${updates.length} cell updates.`);
+
+            // Audit Log
+            const audit: OperationAudit = {
+                id: Math.random().toString(36).substring(7),
+                operation: "manual_edit",
+                timestamp: new Date().toLocaleTimeString()
+            };
+            setAuditLog(prev => [audit, ...prev].slice(0, 5));
+
+            setPendingEdits({});
+
+            // Reload datasets list
+            const res = await api.get("/datasets/");
+            setDatasets(res.data);
+
+            // Switch to the new dataset to show changes
+            if (response.data.new_dataset_id) {
+                setSelectedId(response.data.new_dataset_id);
+            }
+
+        } catch (error: any) {
+            const msg = error.response?.data?.detail || "Update failed";
+            addToast(msg, "error");
+        } finally {
+            setLoading(false);
+        }
+    };
 
     // In JSX near Pipeline History Header
     // ...
@@ -260,12 +324,32 @@ export default function CleaningPage() {
                 </div>
 
                 {/* Right: Stream Analysis - Flexible */}
-                <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden h-full shadow-lg">
+                <div className="flex-1 glass-panel p-6 rounded-2xl border-white/5 flex flex-col overflow-hidden h-full shadow-lg relative">
                     <div className="flex items-center justify-between mb-4 shrink-0 px-1">
                         <div className="flex items-center gap-2">
                             <Layers size={14} className="text-purple-500" />
                             <h2 className="text-sm font-semibold text-gray-400 tracking-wide leading-none">Stream Analysis</h2>
                         </div>
+
+                        {Object.keys(pendingEdits).length > 0 && (
+                            <div className="absolute top-6 left-1/2 -translate-x-1/2 flex items-center gap-2 bg-[#0F172A] border border-yellow-500/30 px-3 py-1.5 rounded-xl shadow-2xl z-40 animate-in fade-in slide-in-from-top-4">
+                                <span className="text-xs font-bold text-yellow-500">{Object.keys(pendingEdits).length} Pending Changes</span>
+                                <div className="h-4 w-px bg-white/10 mx-1"></div>
+                                <button
+                                    onClick={handleDiscardEdits}
+                                    className="text-xs font-bold text-gray-400 hover:text-white transition-colors"
+                                >
+                                    Discard
+                                </button>
+                                <button
+                                    onClick={handleSaveEdits}
+                                    className="bg-yellow-500 hover:bg-yellow-400 text-black text-xs font-bold px-3 py-1 rounded-lg transition-colors ml-1"
+                                >
+                                    Save
+                                </button>
+                            </div>
+                        )}
+
                         <div className="flex items-center gap-3">
                             <select
                                 value={previewLimit}
@@ -291,6 +375,8 @@ export default function CleaningPage() {
                                 columns={preview.columns}
                                 data={preview.data}
                                 datasetId={selectedId || undefined}
+                                onCellEdit={handleCellEdit}
+                                pendingChanges={pendingEdits}
                             />
                         ) : (
                             <div className="h-full flex flex-col items-center justify-center text-gray-700">

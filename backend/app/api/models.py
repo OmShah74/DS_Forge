@@ -60,6 +60,11 @@ def recommend_models(req: RecommendationRequest, db: Session = Depends(get_db)):
     raw_recs = result.get("recommendations", [])
     valid_keys = ModelRegistry.MODELS.keys()
     
+    # Debug Logging
+    print(f"DEBUG: Recommendation Service returned {len(raw_recs)} items")
+    if raw_recs:
+        print(f"DEBUG: First Key: {raw_recs[0].get('model_key')}")
+    
     # 4. Format for Response
     formatted_recs = []
     for r in raw_recs:

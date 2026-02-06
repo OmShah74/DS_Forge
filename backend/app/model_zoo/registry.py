@@ -109,24 +109,26 @@ class ModelRegistry:
             "name": "Random Forest Regressor",
             "type": "regression",
             "class": RandomForestRegressor,
-            "params": {"n_estimators": 100, "max_depth": 20, "random_state": 42},
+            "params": {"n_estimators": 100, "max_depth": 20, "criterion": "squared_error", "random_state": 42},
             "description": "Ensemble of decision trees. Versatile and robust.",
             "formula": "Average of Tree Predictions",
             "param_meta": {
                 "n_estimators": {"type": "number", "min": 50, "max": 500, "step": 50, "label": "Trees", "help": "The number of trees in the forest. More trees usually improve performance but are slower."},
-                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "nullable": True, "help": "The maximum depth of the tree. Limits overfitting."}
+                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "nullable": True, "help": "The maximum depth of the tree. Limits overfitting."},
+                "criterion": {"type": "select", "options": ["squared_error", "absolute_error", "friedman_mse", "poisson"], "label": "Criterion", "help": "The function to measure the quality of a split."}
             }
         },
         "extra_trees_regressor": {
             "name": "Extra Trees Regressor",
             "type": "regression",
             "class": ExtraTreesRegressor,
-            "params": {"n_estimators": 100, "max_depth": 20, "random_state": 42},
+            "params": {"n_estimators": 100, "max_depth": 20, "criterion": "squared_error", "random_state": 42},
             "description": "Similar to Random Forest but chooses split points completely at random. Often faster and reduces variance.",
             "formula": "Average of Randomized Trees",
             "param_meta": {
                 "n_estimators": {"type": "number", "min": 50, "max": 500, "step": 50, "label": "Trees", "help": "Number of trees in the forest."},
-                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "help": "Maximum depth of each tree."}
+                "max_depth": {"type": "number", "min": 5, "max": 50, "step": 5, "label": "Max Depth", "help": "Maximum depth of each tree."},
+                "criterion": {"type": "select", "options": ["squared_error", "absolute_error", "friedman_mse", "poisson"], "label": "Criterion", "help": "The function to measure the quality of a split."}
             }
         },
         "gb_regressor": {
@@ -265,12 +267,13 @@ class ModelRegistry:
             "name": "Gradient Boosting Classifier",
             "type": "classification",
             "class": GradientBoostingClassifier,
-            "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3, "random_state": 42},
+            "params": {"n_estimators": 100, "learning_rate": 0.1, "max_depth": 3, "criterion": "friedman_mse", "random_state": 42},
             "description": "Sequential boosting for classification.",
             "formula": "Weighted Vote of Weak Learners",
             "param_meta": {
                 "n_estimators": {"type": "number", "min": 50, "max": 500, "label": "Estimators", "help": "The number of boosting stages to perform."},
-                "learning_rate": {"type": "number", "min": 0.01, "max": 1.0, "label": "Learning Rate", "help": "Shrinks the contribution of each tree."}
+                "learning_rate": {"type": "number", "min": 0.01, "max": 1.0, "label": "Learning Rate", "help": "Shrinks the contribution of each tree."},
+                "criterion": {"type": "select", "options": ["friedman_mse", "squared_error"], "label": "Criterion", "help": "The function to measure the quality of a split."}
             }
         },
         "hist_gb_classifier": {

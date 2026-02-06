@@ -68,23 +68,78 @@ class TrainingEngine:
             # 4. Preprocessing
             run.stage = "preprocessing"
             run.progress = 30
-            log_event("Applying Label Encoding to categorical dimensions...")
+            log_event("Applying Advanced Preprocessing (Imputation + Encoding)...")
             db.commit()
 
-            # Simple Label Encoding for categorical features
+            from sklearn.feature_extraction.text import TfidfVectorizer
+            from sklearn.impute import SimpleImputer
+
+            # 4a. Handle Missing Values
+            # Numeric Imputation
+            num_cols = X.select_dtypes(include=['int64', 'float64']).columns
+            if len(num_cols) > 0:
+                imp = SimpleImputer(strategy='median')
+                X[num_cols] = imp.fit_transform(X[num_cols])
+
+            # Categorical Imputation
+            cat_cols = X.select_dtypes(include=['object', 'category']).columns
+            if len(cat_cols) > 0:
+                imp_cat = SimpleImputer(strategy='constant', fill_value='Unknown')
+                X[cat_cols] = imp_cat.fit_transform(X[cat_cols])
+
+            # 4b. Feature Encoding
             encoders = {}
-            for col in X.select_dtypes(include=['object', 'category']).columns:
-                le = LabelEncoder()
-                X[col] = le.fit_transform(X[col].astype(str))
-                encoders[col] = le
+            new_X_parts = []
             
+            # Keep Numeric Columns as is
+            if len(num_cols) > 0:
+                new_X_parts.append(X[num_cols].reset_index(drop=True))
+
+            # Process Categorical / Text
+            for col in cat_cols:
+                # Heuristic: If unique values > 20 and average length > 10, treat as Text (TF-IDF)
+                # Otherwise treat as Categorical (Label/OneHot)
+                is_text = False
+                try:
+                    if X[col].nunique() > 20:
+                        # Check avg string length
+                        avg_len = X[col].astype(str).str.len().mean()
+                        if avg_len > 15:
+                            is_text = True
+                except:
+                    pass
+
+                if is_text:
+                    log_event(f"Detected text column '{col}' - Applying TF-IDF Vectorization...")
+                    tfidf = TfidfVectorizer(max_features=50, stop_words='english')
+                    text_matrix = tfidf.fit_transform(X[col].astype(str)).toarray()
+                    # Create DF for these features
+                    tfidf_cols = [f"{col}_tfidf_{i}" for i in range(text_matrix.shape[1])]
+                    new_X_parts.append(pd.DataFrame(text_matrix, columns=tfidf_cols))
+                    encoders[col] = tfidf
+                else:
+                    # Standard Label Encoding
+                    le = LabelEncoder()
+                    # Fit transform returns numpy array, wrap in Series/DF? 
+                    # Actually standardizing on concatenation of DataFrames
+                    encoded_col = le.fit_transform(X[col].astype(str))
+                    new_X_parts.append(pd.DataFrame(encoded_col, columns=[col]))
+                    encoders[col] = le
+            
+            # Reconstruct X
+            if new_X_parts:
+                X = pd.concat(new_X_parts, axis=1)
+            
+            # Ensure Feature Names are clean strings via columns
+            # (Pandas concat handles this, but index reset is crucial above)
+
             y_is_categorical = False
             model_info = ModelRegistry.get_model(run.model_name)
             if y.dtype == 'object' or model_info["type"] == "classification":
                 y_is_categorical = True
                 log_event(f"Target is categorical. Mapping classes: {y.unique()[:3]}...")
                 le_target = LabelEncoder()
-                y = le_target.fit_transform(y)
+                y = le_target.fit_transform(y.astype(str))
                 target_classes = [str(c) for c in le_target.classes_]
                 encoders["__target__"] = le_target
             else:
@@ -104,7 +159,25 @@ class TrainingEngine:
             db.commit()
 
             params = run.parameters or {}
-            clf = model_info["class"](**params)
+            
+            # --- PARAMETER SANITIZATION ---
+            # Only allow parameters that are explicitly defined in the Model Registry for this algorithm.
+            # This prevents frontend 'ghost' parameters (e.g. n_estimators from a previous RF run) 
+            # from crashing models that don't support them (e.g. Ridge).
+            default_params = model_info.get("params", {})
+            valid_keys = set(default_params.keys())
+            
+            # Always allow random_state if the model supports it (most do, but checking defaults is safest)
+            # If 'random_state' is in defaults, it's already covered.
+            
+            clean_params = {k: v for k, v in params.items() if k in valid_keys}
+            
+            # Log specific dropped keys for debugging
+            dropped_keys = set(params.keys()) - set(clean_params.keys())
+            if dropped_keys:
+                log_event(f"Sanitized parameters. Dropped invalid keys: {dropped_keys}")
+
+            clf = model_info["class"](**clean_params)
             clf.fit(X_train, y_train)
             log_event("Core weights calculation complete. The mathematical function has been defined.")
 
@@ -172,9 +245,21 @@ class TrainingEngine:
                 metrics["max_error"] = float(max_error(y_test, preds))
                 metrics["median_absolute_error"] = float(median_absolute_error(y_test, preds))
                 try:
-                    metrics["mape"] = float(mean_absolute_percentage_error(y_test, preds))
+                    # Safe MAPE calculation (handling division by zero)
+                    # Convert to numpy arrays to ensure masking works
+                    y_true_safe = np.array(y_test)
+                    y_pred_safe = np.array(preds)
+                    
+                    # Create mask for non-zero values to avoid infinity
+                    mask = y_true_safe != 0
+                    
+                    if np.sum(mask) > 0:
+                        mape = np.mean(np.abs((y_true_safe[mask] - y_pred_safe[mask]) / y_true_safe[mask]))
+                        metrics["mape"] = float(mape)
+                    else:
+                        metrics["mape"] = 0.0 # All targets are zero
                 except:
-                    metrics["mape"] = -1.0 # Handle division by zero potentially
+                    metrics["mape"] = -1.0 # Fallback error value
                 
                 limit = 100
                 report["type"] = "regression"
