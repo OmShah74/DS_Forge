@@ -3,7 +3,7 @@ services:
     build:
       context: ./backend
       dockerfile: Dockerfile
-    image: omshah74/dsforge-backend:v1.0
+    image: omshah74/dsforge-backend:v1.1
     container_name: ds-forge-backend
     ports:
       - "8000:8000"
@@ -23,7 +23,7 @@ services:
       context: ./frontend
       dockerfile: Dockerfile
       target: deps
-    image: omshah74/dsforge-frontend:v1.0
+    image: omshah74/dsforge-frontend:v1.1
     container_name: ds-forge-frontend
     ports:
       - "3000:3000"
