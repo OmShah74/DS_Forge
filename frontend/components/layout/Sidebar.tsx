@@ -65,7 +65,7 @@ export default function Sidebar() {
         {!sidebarCollapsed && (
           <div className="flex items-center gap-2 mt-4">
             <span className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse"></span>
-            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">v1.0.0 • CPU-Engine</p>
+            <p className="text-[11px] font-bold text-gray-500 uppercase tracking-widest">v1.1 • CPU-Engine</p>
           </div>
         )}
       </div>

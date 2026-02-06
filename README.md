@@ -67,22 +67,72 @@ DS-Forge is built on a modern, high-performance stack designed for scalability a
 
 You do **not** need to install Python or Node.js manually. The entire system is containerized.
 
-### Prerequisites
-- **Docker Desktop** (Running)
+### Method 1: Docker Compose (Recommended)
+This is the easiest way to run the full app with persistent storage. 
 
-### Installation
-1.  **Clone or Create Directory**:
-    You can simply create a `docker-compose.yml` file with the configuration below or clone the repository.
+1. Create a file named `docker-compose.yml` and paste the following:
+```yaml
+version: '3.8'
+services:
+  backend:
+    image: omshah74/dsforge-backend:v1.1
+    container_name: ds-forge-backend
+    ports: ["8000:8000"]
+    volumes:
+      - dsforge_storage:/app/app/storage
+      - dsforge_db:/app/app/db
+    restart: always
 
-2.  **Run with Docker Compose**:
-    ```bash
-    docker-compose up --build
-    ```
-    *This command will pull the necessary images, build the containers, and start the full stack.*
+  frontend:
+    image: omshah74/dsforge-frontend:v1.1
+    container_name: ds-forge-frontend
+    ports: ["3000:3000"]
+    environment:
+      - NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1
+    depends_on: [backend]
+    restart: always
 
-3.  **Access the Application**:
-    - **Frontend Dashboard**: [http://localhost:3000](http://localhost:3000)
-    - **Backend API Docs**: [http://localhost:8000/docs](http://localhost:8000/docs)
+volumes:
+  dsforge_storage:
+  dsforge_db:
+```
+
+2. Open your terminal in that folder and run:
+```bash
+docker-compose up -d
+```
+
+### Method 2: Standalone Docker Commands
+Use this if you prefer running containers individually. Note that you must specify volumes to keep your data after restart.
+
+**1. Create Volumes**
+```bash
+docker volume create dsforge_storage
+docker volume create dsforge_db
+```
+
+**2. Start Backend**
+```bash
+docker run -d \
+  --name dsforge-backend \
+  -p 8000:8000 \
+  -v dsforge_storage:/app/app/storage \
+  -v dsforge_db:/app/app/db \
+  omshah74/dsforge-backend:v1.1
+```
+
+**3. Start Frontend**
+```bash
+docker run -d \
+  --name dsforge-frontend \
+  -p 3000:3000 \
+  -e NEXT_PUBLIC_API_URL=http://localhost:8000/api/v1 \
+  omshah74/dsforge-frontend:v1.1
+```
+
+### Access the System
+- **Dashboard**: [http://localhost:3000](http://localhost:3000)
+- **API Documentation**: [http://localhost:8000/docs](http://localhost:8000/docs)
 
 ---
 
