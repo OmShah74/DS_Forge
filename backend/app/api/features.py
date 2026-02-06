@@ -75,3 +75,20 @@ def apply_feature_engineering(request: FeatureRequest, db: Session = Depends(get
     db.refresh(new_dataset)
 
     return {"message": "Feature Engineering applied", "new_dataset_id": new_dataset.id}
+
+@router.get("/recommend/{dataset_id}")
+def get_recommendations(dataset_id: int, db: Session = Depends(get_db)):
+    """
+    Analyze dataset and return a list of recommended feature engineering operations.
+    """
+    dataset = db.query(Dataset).filter(Dataset.id == dataset_id).first()
+    if not dataset:
+        raise HTTPException(status_code=404, detail="Dataset not found")
+    
+    try:
+        df = pd.read_parquet(dataset.file_path)
+    except Exception:
+        raise HTTPException(status_code=500, detail="Could not read source file")
+    
+    recommendations = FeatureEngine.get_recommendations(df)
+    return {"recommendations": recommendations}
