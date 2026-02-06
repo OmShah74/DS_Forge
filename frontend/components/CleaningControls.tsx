@@ -298,6 +298,79 @@ export default function CleaningControls({ operation, columns, onParamsChange }:
                         </div>
                     </>
                 )}
+
+                {/* --- NEW OPERATIONS --- */}
+                {operation === "sort_values" && (
+                    <>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Sort Order</label>
+                            <div className="flex gap-4 p-4 bg-black/40 border border-white/5 rounded-xl">
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        checked={params['ascending'] !== false}
+                                        onChange={() => updateParam('ascending', true)}
+                                        className="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm font-bold text-white">Ascending (A-Z)</span>
+                                </label>
+                                <label className="flex items-center gap-2 cursor-pointer">
+                                    <input
+                                        type="radio"
+                                        checked={params['ascending'] === false}
+                                        onChange={() => updateParam('ascending', false)}
+                                        className="text-purple-600 focus:ring-purple-500"
+                                    />
+                                    <span className="text-sm font-bold text-white">Descending (Z-A)</span>
+                                </label>
+                            </div>
+                        </div>
+                        <div className="md:col-span-2">
+                            {renderMultiSelect("Sort By Columns", "columns")}
+                        </div>
+                    </>
+                )}
+
+                {operation === "shuffle_data" && (
+                    <div className="md:col-span-2 p-4 bg-white/5 rounded-xl border border-white/5 text-center">
+                        <p className="text-xs text-gray-400">Rearranges all rows randomly. No parameters needed.</p>
+                    </div>
+                )}
+
+                {operation === "sample_data" && (
+                    <>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Sample Fraction (0.1 - 1.0)</label>
+                            <input
+                                type="number"
+                                step="0.1"
+                                min="0.01"
+                                max="1.0"
+                                value={params['frac'] ?? 0.1}
+                                onChange={(e) => updateParam('frac', parseFloat(e.target.value))}
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none font-mono"
+                            />
+                        </div>
+                        <div className="space-y-2">
+                            <label className="text-xs font-bold text-gray-500 uppercase tracking-widest px-1">Random Seed (Optional)</label>
+                            <input
+                                type="number"
+                                value={params['random_state'] ?? ''}
+                                onChange={(e) => updateParam('random_state', parseInt(e.target.value) || null)}
+                                placeholder="42"
+                                className="w-full bg-black/40 border border-white/5 rounded-xl p-4 text-white text-sm focus:ring-2 focus:ring-purple-500/30 outline-none font-mono"
+                            />
+                        </div>
+                    </>
+                )}
+
+                {/* --- DEFAULT / CATCH-ALL --- */}
+                {/* For ops like text_titlecase, text_trim, regex_replace (if not under find_replace), etc. */}
+                {!["drop_missing", "fill_missing", "rename_columns", "drop_columns", "convert_type", "remove_outliers_zscore", "remove_outliers_iqr", "text_clean", "drop_duplicates", "find_replace", "winsorize", "sort_values", "shuffle_data", "sample_data"].includes(operation) && (
+                    <div className="md:col-span-2">
+                        {renderMultiSelect("Target Columns", "columns")}
+                    </div>
+                )}
             </div>
         </div>
     );

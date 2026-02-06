@@ -217,6 +217,23 @@ class CleaningEngine:
                 for col in cols:
                     df[col] = df[col].astype(str).str.replace(pattern, replace_val, regex=True)
 
+            # --- 6. STRUCTURE / ROW OPERATIONS ---
+            elif operation == "sort_values":
+                cols = get_target_cols(params, df)
+                ascending = params.get('ascending', True)
+                if cols:
+                    df.sort_values(by=cols, ascending=ascending, inplace=True)
+
+            elif operation == "shuffle_data":
+                # Shuffle rows
+                df = df.sample(frac=1.0, random_state=params.get('random_state', None)).reset_index(drop=True)
+
+            elif operation == "sample_data":
+                frac = float(params.get('frac', 0.1))
+                n = params.get('n', None)
+                if n is not None: n = int(n)
+                df = df.sample(n=n, frac=frac if n is None else None, random_state=params.get('random_state', None)).reset_index(drop=True)
+
             # --- 7. MANUAL UPDATES ---
             elif operation == "manual_update":
                 updates = params.get('updates', [])
